@@ -5,14 +5,24 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "aiosqlite>=0.21.0",
     "discord>=2.3.2",
+    "duckduckgo-search>=8.0.2",
     "google-generativeai>=0.8.5",
+    "instagrapi>=2.1.5",
+    "ipykernel>=6.29.5",
     "langchain>=0.3.25",
     "langchain-community>=0.3.24",
     "langchain-experimental>=0.3.4",
     "langchain-google-genai>=2.0.10",
     "langchain-groq>=0.3.2",
+    "langchain-openai>=0.3.18",
+    "langchain-openrouter>=0.0.1",
     "langgraph>=0.4.7",
+    "langgraph-checkpoint-sqlite>=2.0.10",
+    "openai>=1.82.0",
+    "pillow>=11.2.1",
     "python-dotenv>=1.1.0",
+    "wikipedia>=1.4.0",
     "yt-dlp>=2025.5.22",
 ]

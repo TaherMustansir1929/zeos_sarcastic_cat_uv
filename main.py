@@ -3,22 +3,24 @@ import asyncio  # NEW
 import logging
 import os
 import platform  # MOVED FROM play_next_song
-from collections import deque  # NEW
+from collections import deque
+from typing import cast  # NEW
+from dotenv import load_dotenv
 
 import discord
 import yt_dlp  # NEW
 from discord import app_commands
 from discord.ext import commands
-from dotenv import load_dotenv
+from discord.ext.commands import Context
 
-from handlers.ai import ai_handler
-from handlers.ask import ask_handler
+from handlers.assistant import ai_handler
 from handlers.channel_restriction import channel_restriction_handler
 from handlers.poetry import poetry_handler
 from handlers.rate import rate_handler
 from handlers.react import react_handler
 from handlers.rizz import rizz_handler
 from handlers.word_counter import word_counter_handler
+from handlers.zeo import zeo_handler
 
 # Dictionary to store chat history for each user
 chat_histories_google_sdk = {}
@@ -49,8 +51,6 @@ intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-secret_role = "Developer"
-
 
 @bot.event
 async def on_ready():
@@ -71,34 +71,60 @@ async def secret(ctx):
     )
 
 
-@secret.error
-async def secret_error(ctx, error):
-    if isinstance(error, commands.MissingRole):
-        await ctx.send("You do not have permission to do that!")
-
-
 # -------------------------------------------------------------------------------------
 # -----------------------------MY CUSTOM COMMANDS--------------------------------------
 # -------------------------------------------------------------------------------------
 
+# --------LANGGRAPH IMPLEMENTATION--------
+from agent_graph.graph import agent_graph
 
-# ---------SARCASTIC AI COMMANDS-------
 @bot.command(
+    name="zeo",
     brief="Ask me your stupid questions and Imma reply respectfully 😏🥀",
     help="Ask me your stupid questions and Imma reply respectfully 😏🥀",
 )
-@commands.cooldown(1, 15, commands.BucketType.user)
-async def ask(ctx, *, msg):
-    await ask_handler(ctx, msg, chat_histories_google_sdk)
+@commands.cooldown(1, 30, commands.BucketType.user)
+async def zeo(ctx: Context, *, msg: str):
+    
+    await zeo_handler(bot=bot, ctx=ctx, msg=msg)
 
-
-@ask.error
-async def ask_error(ctx, error):
+@zeo.error
+async def zeo_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.reply(
             f"Please wait {error.retry_after:.2f} seconds before using this command again."
         )
     await ctx.reply(f"Sorry an error occurred -> {error}")
+
+
+# -----------NORMAL LLM CHAT---------
+@bot.command(
+    brief="Talk to AI",
+    help="Use this command to access an AI chatbot directly into the server.",
+)
+@commands.cooldown(1, 30, commands.BucketType.user)
+async def ai(ctx, *, msg):
+    
+    await ai_handler(bot=bot, ctx=ctx, msg=msg)
+
+@ai.error
+async def ai_error(ctx, error):
+    if isinstance(error, commands.CommandOnCooldown):
+        await ctx.reply(
+            f"Please wait {error.retry_after:.2f} seconds before using this command again."
+        )
+    await ctx.reply(f"Sorry an error occurred -> {error}")
+
+
+# ---------SARCASTIC AI COMMANDS-------
+@bot.command(
+    brief="This command is now deprecated. Please proceed with the new command: `!zeo <Your Msg>`",
+    help="This command is now deprecated. Please proceed with the new command: `!zeo <Your Msg>`",
+)
+@commands.cooldown(1, 15, commands.BucketType.user)
+async def ask(ctx, *, msg):
+    # await ask_handler(ctx, msg, chat_histories_google_sdk)
+    await ctx.reply("This command is now deprecated. Please proceed with the new command: `!zeo <Your Msg>`\n Use `!help` command for further help. Thank You!")
 
 
 # ---------RIZZ COMMAND-------
@@ -159,20 +185,23 @@ async def ping(ctx: commands.Context):
 # ----------Spam Messages-------------
 @bot.command(hidden=True)
 @commands.cooldown(1, 30, commands.BucketType.user)
-async def spam_msg(ctx, *, msg):
-    for _ in range(10):  # Use _ for unused variable
-        await ctx.send(f"{msg}")
-        await asyncio.sleep(0.5)  # Use asyncio.sleep in async function
+async def spam_msg(ctx, *, msg: str):
+    n = 10
+    msg_arr = []
 
+    if "?" in msg:
+        msg_arr = msg.split("?")
+        
+        try:
+            n = int(msg_arr[1].strip())
+        except (IndexError, ValueError):
+            n = 10
+    else:
+        msg_arr = [msg]
 
-# -----------NORMAL LLM CHAT---------
-@bot.command(
-    brief="Talk to AI",
-    help="Use this command to access an AI chatbot directly into the server.",
-)
-@commands.cooldown(1, 30, commands.BucketType.user)
-async def ai(ctx, *, msg):
-    await ai_handler(ctx, msg, chat_histories_ai_google_sdk)
+    for i in range(n):
+        await ctx.send(f"[{i+1}] {msg_arr[0]}")
+        await asyncio.sleep(0.25)  # Use asyncio.sleep in async function
 
 
 # -----------REACT to the response given by !smart_ask command---------

@@ -11,3 +11,12 @@ wheels/
 
 # Env Variables
 .env
+
+# Insta session file
+ig_session_zeossarcasticcat.json
+
+# log and db files
+/*.log
+*.log
+logs/
+db/

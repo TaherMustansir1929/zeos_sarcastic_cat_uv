@@ -1,36 +1,20 @@
 import random
-import os
-from typing import cast
-from pydantic import SecretStr
-from dotenv import load_dotenv
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
-
-load_dotenv()
+from langchain_openai import ChatOpenAI
 
 
 def get_llm_model() -> tuple[str, BaseChatModel]:
     
-    # 50/50 chance of Gemini and Groq
-    gamble = random.randint(0, 1)
+    # 50/50 chance of Gemini and Groq and OpenAI
+    gamble = random.randint(0, 2)
+
     if gamble == 0:
         return "gemini-2.0-flash", ChatGoogleGenerativeAI(model="gemini-2.0-flash")
     
-    else:
-        api_key_holders = ["zeo", "taher", "bot"]
-        random_idx = random.randint(0, len(api_key_holders)-1)
-        
-        random_api_key_holder = api_key_holders[random_idx]
-        random_api_key = os.getenv(random_api_key_holder+"_GROQ_API_KEY")
-        groq_api_key = cast(SecretStr, random_api_key)
-        
-        if not groq_api_key:
-            raise ValueError("Groq API credentials not specified. API key not found.")
-        
-        print(f"[get_llm_model] Using {random_api_key_holder}'s API KEY")
-        
+    elif gamble == 1:        
         groq_models_list = [
             "deepseek-r1-distill-llama-70b",
             "qwen-qwq-32b",
@@ -44,5 +28,26 @@ def get_llm_model() -> tuple[str, BaseChatModel]:
         
         model_name = groq_models_list[random_idx]
            
-        return model_name, ChatGroq(model=model_name, api_key=groq_api_key)
+        return model_name, ChatGroq(model=model_name)
+    
+    else:
+        a4f_base_url = "https://api.a4f.co/v1"
+        a4f_models_list = [
+            "provider-4/claude-3.5-haiku",
+            "provider-4/claude-3.7-sonnet",
+            "provider-4/gemini-2.5-pro-preview-05-06",
+            "provider-4/gemini-2.5-flash-preview-04-17",
+            "provider-2/mistral-large",
+            "provider-4/gpt-4o",
+            "provider-4/gpt-4.1",
+            "provider-4/gpt-4.1-mini",
+            "provider-2/gpt-3.5-turbo",
+            "provider-4/gpt-4.1-nano",
+            "provider-4/qwen-3-235b-a22b",
+        ]
 
+        random_idx = random.randint(0, len(a4f_models_list)-1)
+
+        model_name = a4f_models_list[random_idx]
+
+        return model_name.split("/")[1], ChatOpenAI(model=model_name, base_url=a4f_base_url)

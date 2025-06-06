@@ -3,12 +3,10 @@ from langchain.tools import tool
 from duckduckgo_search import DDGS
 import wikipedia
 
-from langchain_experimental.tools import PythonREPLTool
 from langchain_community.tools.tavily_search import TavilySearchResults
 
 
 tavily_search = TavilySearchResults(max_result=3)
-python_repl_tool = PythonREPLTool()
 
 @tool
 def duckduckgo_search(query: str) -> str:
@@ -42,4 +40,4 @@ def wikipedia_search(query: str) -> str:
         return f"Error: {str(e)}"
 
 
-basic_tools_list = [tavily_search, python_repl_tool, duckduckgo_search, wikipedia_search]
+basic_tools_list = [tavily_search, duckduckgo_search, wikipedia_search]

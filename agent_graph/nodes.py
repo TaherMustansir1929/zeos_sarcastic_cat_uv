@@ -7,26 +7,25 @@ from my_prompts.ai_prompts import ai_prompt
 from my_prompts.word_count_prompts import word_count_prompt
 
 from typing import List, cast
-from dotenv import load_dotenv
-load_dotenv()
 
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, ToolMessage, BaseMessage
 from langgraph.prebuilt import ToolNode
 
 from agent_graph.state import State
 from agent_graph.my_tools import basic_tools_list
-from agent_graph.email_tool import send_email
-from agent_graph.instagram_tool import send_instagram_dm
 
 
 async def agent_node(state: State):
     print("\nEntering [agent_node]")
     
     model_name, base_llm = state["model"]
-    llm_with_tools = base_llm.bind_tools(tools=tools_list)
+
+    if isinstance(base_llm, ChatOpenAI):
+        llm_with_tools = base_llm
+    else:
+        llm_with_tools = base_llm.bind_tools(tools=tools_list)
     
     prompts_dict = {
-        "start": "",
         "zeo": exp_prompt,
         "rizz": rizz_prompt,
         "rate": rate_prompt,
@@ -36,24 +35,16 @@ async def agent_node(state: State):
         "word_count": word_count_prompt
     }
     
-    system_prompt = prompts_dict[state["handler"]]
-    
-    user_query = state["query"]
-    state["messages"].append(HumanMessage(content=user_query))
-    
     if len(state["messages"]) > 10:
         state["messages"] = state["messages"][-10:]
-
-    if len(state["messages"]) >= 3:
-        input_state_msgs: List[BaseMessage] = state["messages"][:-1] + [SystemMessage(content=system_prompt)] + state["messages"][-1:]
-    elif len(state["messages"]) <= 1 :
-        state["messages"].append(SystemMessage(content=system_prompt))
-        input_state_msgs = state["messages"]
-    else:
-        input_state_msgs = [SystemMessage(content=system_prompt)] + state["messages"]
     
-    print(input_state_msgs)
-    response = llm_with_tools.invoke(input=input_state_msgs)
+    system_prompt = prompts_dict[state["handler"]]
+    user_query = state["query"]
+
+    state["messages"].append(SystemMessage(content=system_prompt))
+    state["messages"].append(HumanMessage(content=user_query))
+
+    response = llm_with_tools.invoke(input=state["messages"])
     
     state["messages"].append(response)
     
@@ -67,7 +58,7 @@ async def agent_node(state: State):
     return state
 
 
-tools_list = basic_tools_list + [send_email, send_instagram_dm]
+tools_list = basic_tools_list + []
 base_tools_node = ToolNode(tools=tools_list)
 
 

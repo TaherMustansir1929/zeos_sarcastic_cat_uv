@@ -1,30 +1,26 @@
-from dotenv import load_dotenv
 from typing import Literal, Optional, cast
 import discord
 from discord.ext import commands
 import os
 import time
-import aiosqlite
 
 from langchain_core.messages import AIMessage
 from langchain_core.runnables.config import RunnableConfig
 
 from langgraph.graph import StateGraph, END
-from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+from langgraph.checkpoint.memory import MemorySaver
 
 from agent_graph.utils import get_llm_model
 from agent_graph.nodes import agent_node, tools_node
 from agent_graph.routers import tools_router
 from agent_graph.state import State
 
-load_dotenv()
-
 
 BASE_DIR = os.path.dirname(os.path.abspath("__file__"))
 DB_DIR = os.path.join(BASE_DIR, "db", "checkpoint.sqlite")
 
 # Initialize memory as None, will be set in agent_graph function
-memory = None
+memory = MemorySaver()
 
 # Create the graph builder
 builder = StateGraph(State)
@@ -42,20 +38,12 @@ builder.add_conditional_edges(AGENT, tools_router, {
 })
 builder.add_edge(TOOLS, AGENT)
 
-# Compile the graph without a checkpointer for now
-graph = builder.compile()
+# Compile the graph with a memory checkpointer
+graph = builder.compile(checkpointer=memory)
 
 
 async def agent_graph(ctx: commands.Context, msg: str, handler: Literal["zeo", "assistant", "rizz", "rate", "react", "word_count", "poetry"], log: Optional[str]) -> str:
     start_time = time.time()
-    
-    # Initialize the memory with a running event loop
-    global memory, graph
-    if memory is None:
-        sql_conn = await aiosqlite.connect(DB_DIR, check_same_thread=False)
-        memory = AsyncSqliteSaver(conn=sql_conn)
-        # Recompile the graph with the checkpointer
-        graph = builder.compile(checkpointer=memory)
     
     model_name, llm = get_llm_model()
     
@@ -66,7 +54,6 @@ async def agent_graph(ctx: commands.Context, msg: str, handler: Literal["zeo", "
         "recursion_limit": 6
     }
     
-    # Create state without bot and ctx objects
     input_dict: State = {
         "messages": [],
         "handler": handler,
@@ -87,13 +74,11 @@ async def agent_graph(ctx: commands.Context, msg: str, handler: Literal["zeo", "
     
     end_time = time.time()
     
-    #-----DEBUGGING-----
-    # for msg in response["messages"][-4:]:
-    #     pprint(msg)
-    #     print()
+    final_response = f"""{ctx.author.mention} {parsed_response} \n `Executed in {(end_time - start_time):.2f} seconds` `AI Model: {model_name}` {f"`Tools used: {response["custom_tools_used"]}`" if len(response["custom_tools_used"]) > 0 else ""}"""
     
-    final_response = f"{ctx.user.mention if isinstance(ctx, discord.Interaction) else ctx.author.mention} {parsed_response} \n `Executed in {(end_time - start_time):.2f} seconds` `AI Model: {model_name}` {f"`Tools used: {response["custom_tools_used"]}`" if len(response["custom_tools_used"]) > 0 else ""}"
-    
-    print(f"\nFINAL RESPONSE: {final_response}\n\n")
+    print(f"""
+    USER: {msg}\n
+    FINAL RESPONSE: {final_response}\n\n
+    """)
     
     return final_response

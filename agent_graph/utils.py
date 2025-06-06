@@ -9,7 +9,8 @@ from langchain_openai import ChatOpenAI
 def get_llm_model() -> tuple[str, BaseChatModel]:
     
     # 50/50 chance of Gemini and Groq and OpenAI
-    gamble = random.randint(0, 2)
+    # gamble = random.randint(0, 2)
+    gamble = 2
 
     if gamble == 0:
         return "gemini-2.0-flash", ChatGoogleGenerativeAI(model="gemini-2.0-flash")
@@ -33,17 +34,10 @@ def get_llm_model() -> tuple[str, BaseChatModel]:
     else:
         a4f_base_url = "https://api.a4f.co/v1"
         a4f_models_list = [
-            "provider-4/claude-3.5-haiku",
-            "provider-4/claude-3.7-sonnet",
-            "provider-4/gemini-2.5-pro-preview-05-06",
-            "provider-4/gemini-2.5-flash-preview-04-17",
-            "provider-2/mistral-large",
-            "provider-4/gpt-4o",
-            "provider-4/gpt-4.1",
-            "provider-4/gpt-4.1-mini",
-            "provider-2/gpt-3.5-turbo",
-            "provider-4/gpt-4.1-nano",
-            "provider-4/qwen-3-235b-a22b",
+            "provider-2/mistral-large", # yes
+            "provider-4/gpt-4o", # yes
+            "provider-4/gpt-4.1-mini", # yes
+            "provider-2/gpt-3.5-turbo", # yes
         ]
 
         random_idx = random.randint(0, len(a4f_models_list)-1)

@@ -17,14 +17,11 @@ from handlers.assistant import ai_handler
 from handlers.channel_restriction import channel_restriction_handler
 from handlers.poetry import poetry_handler
 from handlers.rate import rate_handler
-from handlers.react import react_handler
 from handlers.rizz import rizz_handler
 from handlers.word_counter import word_counter_handler
 from handlers.zeo import zeo_handler
 
 # Dictionary to store chat history for each user
-chat_histories_google_sdk = {}
-chat_histories_ai_google_sdk = {}
 chat_histories_poetry = {}
 
 # Configure discord.py logging level to INFO to avoid excessive DEBUG logs
@@ -44,7 +41,7 @@ root_logger.setLevel(logging.CRITICAL)
 load_dotenv()
 token = os.getenv("DISCORD_TOKEN")
 
-handler = logging.FileHandler(filename="discord.log", encoding="utf-8", mode="w")
+handler_1 = logging.FileHandler(filename="discord.log", encoding="utf-8", mode="w")
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
@@ -83,7 +80,7 @@ from agent_graph.graph import agent_graph
     brief="Ask me your stupid questions and Imma reply respectfully 😏🥀",
     help="Ask me your stupid questions and Imma reply respectfully 😏🥀",
 )
-@commands.cooldown(1, 30, commands.BucketType.user)
+@commands.cooldown(1, 15, commands.BucketType.user)
 async def zeo(ctx: Context, *, msg: str):
     
     await zeo_handler(bot=bot, ctx=ctx, msg=msg)
@@ -102,7 +99,7 @@ async def zeo_error(ctx, error):
     brief="Talk to AI",
     help="Use this command to access an AI chatbot directly into the server.",
 )
-@commands.cooldown(1, 30, commands.BucketType.user)
+@commands.cooldown(1, 15, commands.BucketType.user)
 async def ai(ctx, *, msg):
     
     await ai_handler(bot=bot, ctx=ctx, msg=msg)
@@ -202,16 +199,6 @@ async def spam_msg(ctx, *, msg: str):
     for i in range(n):
         await ctx.send(f"[{i+1}] {msg_arr[0]}")
         await asyncio.sleep(0.25)  # Use asyncio.sleep in async function
-
-
-# -----------REACT to the response given by !smart_ask command---------
-@bot.command(
-    brief="REACT to the response given by !smart_ask command",
-    help="Use this command to react to the !smart_ask command with emojis",
-)
-@commands.cooldown(1, 30, commands.BucketType.user)
-async def react(ctx, *, msg):
-    await react_handler(ctx, msg, chat_histories_google_sdk)
 
 
 # -----------URDU POETRY COMMAND(SPECIAL)------------------------------
@@ -683,4 +670,4 @@ async def play_next_song(
 # Removed redundant queue handling at the end
 
 
-bot.run(token, log_handler=handler, log_level=logging.DEBUG)
+bot.run(token, log_handler=handler_1, log_level=logging.DEBUG)

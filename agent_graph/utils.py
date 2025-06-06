@@ -2,10 +2,13 @@ import random
 import os
 from typing import cast
 from pydantic import SecretStr
+from dotenv import load_dotenv
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
+
+load_dotenv()
 
 
 def get_llm_model() -> tuple[str, BaseChatModel]:

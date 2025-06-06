@@ -12,7 +12,7 @@ load_dotenv()
 @tool
 def send_instagram_dm(username: str, message: str) -> str:
     """
-    Send a direct message to a user on Instagram.
+    Send a direct message to a user on Instagram. (only if asked explicitly)
     
     Args:
         username (str): The Instagram username of the recipient.

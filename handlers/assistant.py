@@ -10,6 +10,7 @@ LOADING_MESSAGES = [
     "Processing...",
     "Contemplating life choices...",
     "Seeking Enlightenment...",
+    "Running some code...",
 ]
 n = len(LOADING_MESSAGES)
 

@@ -92,7 +92,7 @@ async def agent_graph(ctx: commands.Context, msg: str, handler: Literal["zeo", "
     #     pprint(msg)
     #     print()
     
-    final_response = f"{ctx.user.mention if isinstance(ctx, discord.Interaction) else ctx.author.mention} {parsed_response} \n `Executed in {(end_time - start_time):.2f} seconds` `AI Model: {model_name}` `Tools used: {response["custom_tools_used"]}`"
+    final_response = f"{ctx.user.mention if isinstance(ctx, discord.Interaction) else ctx.author.mention} {parsed_response} \n `Executed in {(end_time - start_time):.2f} seconds` `AI Model: {model_name}` {f"`Tools used: {response["custom_tools_used"]}`" if len(response["custom_tools_used"]) > 0 else ""}"
     
     print(f"\nFINAL RESPONSE: {final_response}\n\n")
     

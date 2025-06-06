@@ -7,6 +7,8 @@ from my_prompts.ai_prompts import ai_prompt
 from my_prompts.word_count_prompts import word_count_prompt
 
 from typing import List, cast
+from dotenv import load_dotenv
+load_dotenv()
 
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, ToolMessage, BaseMessage
 from langgraph.prebuilt import ToolNode
@@ -42,11 +44,15 @@ async def agent_node(state: State):
     if len(state["messages"]) > 10:
         state["messages"] = state["messages"][-10:]
 
-    if not len(state["messages"]) < 3:
+    if len(state["messages"]) >= 3:
         input_state_msgs: List[BaseMessage] = state["messages"][:-1] + [SystemMessage(content=system_prompt)] + state["messages"][-1:]
+    elif len(state["messages"]) <= 1 :
+        state["messages"].append(SystemMessage(content=system_prompt))
+        input_state_msgs = state["messages"]
     else:
         input_state_msgs = [SystemMessage(content=system_prompt)] + state["messages"]
     
+    print(input_state_msgs)
     response = llm_with_tools.invoke(input=input_state_msgs)
     
     state["messages"].append(response)

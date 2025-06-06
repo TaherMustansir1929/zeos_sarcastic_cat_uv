@@ -13,7 +13,7 @@ load_dotenv()
 @tool
 def send_email(to_email: str, message: str, subject:str = "No Subject"):
     """
-    Send an email to a specified email address.
+    Send an email to a specified email address. (only if asked explicitly)
     
     Args:
         to_email (str): Recipient's email address.

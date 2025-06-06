@@ -5,6 +5,9 @@ import wikipedia
 
 from langchain_community.tools.tavily_search import TavilySearchResults
 
+from dotenv import load_dotenv
+load_dotenv()
+
 
 tavily_search = TavilySearchResults(max_result=3)
 

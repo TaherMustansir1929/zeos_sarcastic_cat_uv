@@ -8,7 +8,8 @@ from my_prompts.word_count_prompts import word_count_prompt
 
 from typing import List, cast
 
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, ToolMessage, BaseMessage
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, ToolMessage
+from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import ToolNode
 
 from agent_graph.state import State

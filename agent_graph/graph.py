@@ -45,13 +45,13 @@ graph = builder.compile(checkpointer=memory)
 async def agent_graph(ctx: commands.Context, msg: str, handler: Literal["zeo", "assistant", "rizz", "rate", "react", "word_count", "poetry"], log: Optional[str]) -> str:
     start_time = time.time()
     
-    model_name, llm = get_llm_model()
+    model_name, llm = get_llm_model(handler=handler)
     
     config: RunnableConfig = {
         "configurable": {
             "thread_id": handler+"_thread"
         },
-        "recursion_limit": 6
+        "recursion_limit": 8
     }
     
     input_dict: State = {

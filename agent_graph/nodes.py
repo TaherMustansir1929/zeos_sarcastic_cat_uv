@@ -66,7 +66,9 @@ base_tools_node = ToolNode(tools=tools_list)
 async def tools_node(state: State) -> State:
     print("\nEntered [tools_node]")
 
-    if state["tool_count"] >= 3:
+    state["tool_count"] += 1
+
+    if state["tool_count"] > 2:
         state["messages"].append(
             ToolMessage(
                 content="Sorry the tool calling limit has been reached. Cannot provide any relevant information. Respond with your own deduction."
@@ -79,6 +81,5 @@ async def tools_node(state: State) -> State:
         state["custom_tools_used"].append(state['messages'][-1].tool_calls[0]["name"])
         
     result = cast(State, base_tools_node.invoke(state))
-    state["tool_count"] += 1
 
     return result

@@ -6,11 +6,10 @@ from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
 
 
-def get_llm_model() -> tuple[str, BaseChatModel]:
+def get_llm_model(handler: str) -> tuple[str, BaseChatModel]:
     
     # 50/50 chance of Gemini and Groq and OpenAI
-    # gamble = random.randint(0, 2)
-    gamble = 2
+    gamble = random.randint(0, 2)
 
     if gamble == 0:
         return "gemini-2.0-flash", ChatGoogleGenerativeAI(model="gemini-2.0-flash")
@@ -38,7 +37,12 @@ def get_llm_model() -> tuple[str, BaseChatModel]:
             "provider-4/gpt-4o", # yes
             "provider-4/gpt-4.1-mini", # yes
             "provider-2/gpt-3.5-turbo", # yes
+            "provider-4/deepseek-v3", # yes
+            "provider-4/gemini-2.5-pro-preview-05-06", # yes 
         ]
+
+        if handler == "assistant":
+            a4f_models_list.extend(["provider-4/claude-3.7-sonnet", "provider-4/claude-3.5-haiku"])
 
         random_idx = random.randint(0, len(a4f_models_list)-1)
 

@@ -11,6 +11,7 @@ from discord.ext.commands import Context
 
 from handlers.assistant import ai_handler
 from handlers.channel_restriction import channel_restriction_handler
+from handlers.image_gen import image_handler
 from handlers.poetry import poetry_handler
 from handlers.rate import rate_handler
 from handlers.rizz import rizz_handler
@@ -134,6 +135,26 @@ async def speak_error(ctx, error):
             f"Please wait {error.retry_after:.2f} seconds before using this command again."
         )
     await ctx.reply(f"Sorry an error occurred -> {error}")
+
+
+#----------GeminiImageGenCommand---------
+@bot.command(
+    brief="Create AI images using Google Gemini",
+    help="Use this command to create AI images using Google Gemini",
+)
+@commands.cooldown(1, 30, commands.BucketType.user)
+async def image(ctx, *, msg):
+    
+    await image_handler(bot=bot, ctx=ctx, msg=msg)
+
+@image.error
+async def image_error(ctx, error):
+    if isinstance(error, commands.CommandOnCooldown):
+        await ctx.reply(
+            f"Please wait {error.retry_after:.2f} seconds before using this command again."
+        )
+    await ctx.reply(f"Sorry an error occurred -> {error}")
+
 
 
 # ---------SARCASTIC AI COMMANDS-------

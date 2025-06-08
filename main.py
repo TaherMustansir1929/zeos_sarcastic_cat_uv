@@ -16,6 +16,7 @@ from handlers.rizz import rizz_handler
 from handlers.speak import speak_handler
 from handlers.word_counter import word_counter_handler
 from handlers.zeo import zeo_handler
+from handlers.image_gen import image_handler
 
 # Dictionary to store chat history for each user
 chat_histories_poetry = {}
@@ -128,6 +129,25 @@ async def speak(ctx, handler, *, msg):
 
 @speak.error
 async def speak_error(ctx, error):
+    if isinstance(error, commands.CommandOnCooldown):
+        await ctx.reply(
+            f"Please wait {error.retry_after:.2f} seconds before using this command again."
+        )
+    await ctx.reply(f"Sorry an error occurred -> {error}")
+
+
+# ----------GeminiImageGenCommand---------
+@bot.command(
+    brief="Create AI images using Google Gemini",
+    help="Use this command to create AI images using Google Gemini",
+)
+@commands.cooldown(1, 30, commands.BucketType.user)
+async def image(ctx, *, msg):
+    
+    await image_handler(bot=bot, ctx=ctx, msg=msg)
+
+@image.error
+async def image_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.reply(
             f"Please wait {error.retry_after:.2f} seconds before using this command again."

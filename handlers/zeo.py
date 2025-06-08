@@ -15,7 +15,7 @@ LOADING_MESSAGES = [
 ]
 n = len(LOADING_MESSAGES)
 
-async def zeo_handler(bot: Bot ,ctx: Context, msg: str):
+async def zeo_handler(bot: Bot, ctx: Context, msg: str):
     # Send initial loading message
     rand_idx = random.randint(0, n-1)
     loading_message = await ctx.send(LOADING_MESSAGES[rand_idx])

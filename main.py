@@ -13,6 +13,7 @@ from handlers.channel_restriction import channel_restriction_handler
 from handlers.poetry import poetry_handler
 from handlers.rate import rate_handler
 from handlers.rizz import rizz_handler
+from handlers.speak import speak_handler
 from handlers.word_counter import word_counter_handler
 from handlers.zeo import zeo_handler
 
@@ -101,6 +102,32 @@ async def ai(ctx, *, msg):
 
 @ai.error
 async def ai_error(ctx, error):
+    if isinstance(error, commands.CommandOnCooldown):
+        await ctx.reply(
+            f"Please wait {error.retry_after:.2f} seconds before using this command again."
+        )
+    await ctx.reply(f"Sorry an error occurred -> {error}")
+    
+
+# ----------11LabsAudioCommand---------
+@bot.command(
+    brief="Talk to AI through 11Labs",
+    help="Use this command to make your bot speak for itself.",
+)
+@commands.cooldown(1, 60, commands.BucketType.user)
+async def speak(ctx, handler, *, msg):
+
+    if handler not in ["zeo", "ai", "poetry"]:
+        await ctx.reply("Invalid handler. Please use one of the following: zeo, ai, poetry")
+        return
+    
+    if handler == "ai":
+        handler = "assistant"
+
+    await speak_handler(bot=bot, ctx=ctx, handler=handler, msg=msg)
+
+@speak.error
+async def speak_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.reply(
             f"Please wait {error.retry_after:.2f} seconds before using this command again."
@@ -215,4 +242,4 @@ async def poetry_error(ctx, error):
     await ctx.reply(f"Sorry an error occured -> {error}")
 
 
-bot.run(token, log_handler=handler_1, log_level=logging.DEBUG)
+bot.run(str(token), log_handler=handler_1, log_level=logging.DEBUG)

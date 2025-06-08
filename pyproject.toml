@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "discord>=2.3.2",
     "duckduckgo-search>=8.0.2",
+    "elevenlabs>=2.3.0",
     "google-generativeai>=0.8.5",
     "ipykernel>=6.29.5",
     "langchain>=0.3.25",

@@ -81,4 +81,6 @@ async def agent_graph(ctx: commands.Context, msg: str, handler: Literal["zeo", "
     FINAL RESPONSE: {final_response}\n\n
     """)
     
+    if log == "speak":
+        return f"{str(parsed_response)}%%{final_response}"
     return final_response

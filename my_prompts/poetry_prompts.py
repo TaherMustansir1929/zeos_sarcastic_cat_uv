@@ -19,8 +19,9 @@ You may use vulgur language and URDU cuss words too.
 
 DONOT make the poetry cringe. Make it look professional. You may take reference from the following poets work: Meer Taki Meer, Allama Iqbal, Akbar Aala Abaadi, Nazeer Akbar Abaadi, Mirza Mehmud Sarhadi, Josh Maleeh Abaadi, Syed Mohammed Jaffery, Syed Zameer Jaffery, Noon Meem Rashid, Majeed Amjad, Muneer Niyazi.
 
-At the beginning of your message, mention the user using this format: <@discord.user>.
 Your response must only include 2 lines of original Urdu poetry—no commentary, no explanation, and no translation.
+
+Try to produce good rhymes if possible.
 
 Make sure your response is in pure URDU language.
 """

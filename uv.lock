@@ -8,6 +8,15 @@ resolution-markers = [
 ]
 
 [[package]]
+name = "aiofiles"
+version = "24.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/0b/03/a88171e277e8caa88a4c77808c20ebb04ba74cc4681bf1e9416c862de237/aiofiles-24.1.0.tar.gz", hash = "sha256:22a075c9e5a3810f0c2e48f3008c94d68c65d763b9b03857924c99e57355166c", size = 30247, upload-time = "2024-06-24T11:02:03.584Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a5/45/30bb92d442636f570cb5651bc661f52b610e2eec3f891a5dc3a4c3667db0/aiofiles-24.1.0-py3-none-any.whl", hash = "sha256:b4ec55f4195e3eb5d7abd1bf7e061763e864dd4954231fb8539a0ef8bb8260e5", size = 15896, upload-time = "2024-06-24T11:02:01.529Z" },
+]
+
+[[package]]
 name = "aiohappyeyeballs"
 version = "2.6.1"
 source = { registry = "https://pypi.org/simple" }
@@ -481,18 +490,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/d3/c3/0fc2c97dea550df9afd072a37c1e95421652e3206bbeaa02378b24c2b480/frozenlist-1.6.0-cp313-cp313t-win32.whl", hash = "sha256:a4d96dc5bcdbd834ec6b0f91027817214216b5b30316494d2b1aebffb87c534f", size = 128797, upload-time = "2025-04-17T22:38:14.013Z" },
     { url = "https://files.pythonhosted.org/packages/ae/f5/79c9320c5656b1965634fe4be9c82b12a3305bdbc58ad9cb941131107b20/frozenlist-1.6.0-cp313-cp313t-win_amd64.whl", hash = "sha256:e18036cb4caa17ea151fd5f3d70be9d354c99eb8cf817a3ccde8a7873b074348", size = 134709, upload-time = "2025-04-17T22:38:15.551Z" },
     { url = "https://files.pythonhosted.org/packages/71/3e/b04a0adda73bd52b390d730071c0d577073d3d26740ee1bad25c3ad0f37b/frozenlist-1.6.0-py3-none-any.whl", hash = "sha256:535eec9987adb04701266b92745d6cdcef2e77669299359c3009c3404dd5d191", size = 12404, upload-time = "2025-04-17T22:38:51.668Z" },
-]
-
-[[package]]
-name = "google"
-version = "3.0.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "beautifulsoup4" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/89/97/b49c69893cddea912c7a660a4b6102c6b02cd268f8c7162dd70b7c16f753/google-3.0.0.tar.gz", hash = "sha256:143530122ee5130509ad5e989f0512f7cb218b2d4eddbafbad40fd10e8d8ccbe", size = 44978, upload-time = "2020-07-11T14:50:45.678Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ac/35/17c9141c4ae21e9a29a43acdfd848e3e468a810517f862cad07977bf8fe9/google-3.0.0-py2.py3-none-any.whl", hash = "sha256:889cf695f84e4ae2c55fbc0cfdaf4c1e729417fa52ab1db0485202ba173e4935", size = 45258, upload-time = "2020-07-11T14:49:58.287Z" },
 ]
 
 [[package]]
@@ -2284,10 +2281,10 @@ name = "zeos-sarcastic-cat-uv"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "aiofiles" },
     { name = "discord" },
     { name = "duckduckgo-search" },
     { name = "elevenlabs" },
-    { name = "google" },
     { name = "google-genai" },
     { name = "google-generativeai" },
     { name = "ipykernel" },
@@ -2305,10 +2302,10 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiofiles", specifier = ">=24.1.0" },
     { name = "discord", specifier = ">=2.3.2" },
     { name = "duckduckgo-search", specifier = ">=8.0.2" },
     { name = "elevenlabs", specifier = ">=2.3.0" },
-    { name = "google", specifier = ">=3.0.0" },
     { name = "google-genai", specifier = ">=1.19.0" },
     { name = "google-generativeai", specifier = ">=0.8.5" },
     { name = "ipykernel", specifier = ">=6.29.5" },

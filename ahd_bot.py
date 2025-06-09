@@ -11,6 +11,7 @@ from discord.ext.commands import Context
 
 from handlers.assistant import ai_handler
 from handlers.channel_restriction import channel_restriction_handler
+from handlers.image_edit import image_edit_handler
 from handlers.image_gen import image_handler
 from handlers.poetry import poetry_handler
 from handlers.rate import rate_handler
@@ -155,6 +156,24 @@ async def image_error(ctx, error):
         )
     await ctx.reply(f"Sorry an error occurred -> {error}")
 
+
+#----------GeminiImageEditCommand----------
+@bot.command(
+    brief="Edit an image using Google Gemini",
+    help="Use this command to edit an image using Google Gemini",
+)
+@commands.cooldown(1, 30, commands.BucketType.user)
+async def edit(ctx: Context):
+    
+    await image_edit_handler(bot=bot, ctx=ctx, message=ctx.message)
+
+@edit.error
+async def edit_error(ctx: Context, error: Exception):
+    if isinstance(error, commands.CommandOnCooldown):
+        await ctx.reply(
+            f"Please wait {error.retry_after:.2f} seconds before using this command again."
+        )
+    await ctx.reply(f"Sorry an error occurred -> {error}")
 
 
 # ---------SARCASTIC AI COMMANDS-------

@@ -10,9 +10,18 @@ def get_llm_model(handler: str) -> tuple[str, BaseChatModel]:
     
     # 50/50 chance of Gemini and Groq and OpenAI
     gamble = random.randint(0, 2)
+    # gamble = 0
 
     if gamble == 0:
-        return "gemini-2.0-flash", ChatGoogleGenerativeAI(model="gemini-2.0-flash")
+        gemini_models_list = [
+            "gemini-2.5-flash-preview-05-20",
+            "gemini-2.0-flash"
+        ]
+
+        random_idx = random.randint(0, len(gemini_models_list)-1)
+        model_name = gemini_models_list[random_idx]
+        
+        return model_name, ChatGoogleGenerativeAI(model=model_name)
     
     elif gamble == 1:        
         groq_models_list = [

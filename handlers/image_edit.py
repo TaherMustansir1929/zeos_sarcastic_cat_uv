@@ -5,15 +5,10 @@ import random
 import aiofiles
 import aiohttp
 from discord.ext.commands import Bot, Context
-from google import genai
-from google.genai import types
-from PIL import Image
-from io import BytesIO
-import PIL.Image
 import discord
 
 from handlers.image_gen import send_image_to_discord
-from my_prompts.image_edit import image_edit_prompt
+from llms.gemini_image_gen import gemini_image_edit
 
 # Animated loading messages
 LOADING_MESSAGES = [
@@ -75,48 +70,6 @@ async def image_edit_handler(bot: Bot, ctx: Context, message: discord.Message):
         animation_task.cancel()
         # Delete the loading message
         await loading_message.delete()
-
-    
-
-def gemini_image_edit(user_prompt: str, image_path: str):
-    image = PIL.Image.open(image_path)
-
-    client = genai.Client()
-
-    text_input = f"""
-    # SYSTEM PROMPT:
-    {image_edit_prompt}
-
-    # USER PROMPT:
-    {user_prompt}
-    """
-
-    response = client.models.generate_content(
-        model="gemini-2.0-flash-preview-image-generation",
-        contents=[text_input, image],
-        config=types.GenerateContentConfig(
-        response_modalities=['TEXT', 'IMAGE']
-        )
-    )
-
-    image_folder = "edit_images/results"
-    os.makedirs(image_folder, exist_ok=True)
-
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"result_{timestamp}.png"
-
-    # Full path for the output file
-    output_path = os.path.join(image_folder, filename)
-
-    message = ""
-    for part in response.candidates[0].content.parts: # type: ignore
-        if part.text is not None:
-            message = part.text
-        elif part.inline_data is not None:
-            image = Image.open(BytesIO(part.inline_data.data)) # type: ignore
-            image.save(output_path)
-
-    return str(message), output_path
 
 
 async def save_discord_image_with_metadata(message, save_directory="edit_images/saved_images"):

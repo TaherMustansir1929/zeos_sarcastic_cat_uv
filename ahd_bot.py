@@ -138,18 +138,22 @@ async def speak_error(ctx, error):
     await ctx.reply(f"Sorry an error occurred -> {error}")
 
 
-#----------GeminiImageGenCommand---------
+# ----------Gemini/Flux-ImageGenCommand---------
 @bot.command(
-    brief="Create AI images using Google Gemini",
-    help="Use this command to create AI images using Google Gemini",
+    brief="Create AI images using Google Gemini or Flux.1 Kontext Pro",
+    help="Use this command to create AI images using Google Gemini or Flux.1 Kontext Pro",
 )
 @commands.cooldown(1, 30, commands.BucketType.user)
-async def image(ctx, *, msg):
+async def image(ctx: Context, model: str, *, msg: str):
+
+    if model not in ["gemini", "flux"]:
+        await ctx.reply("Invalid model. Please use one of the following: gemini, flux \nExample: !image `gemini` or `flux` <Your Prompt>")
+        return
     
-    await image_handler(bot=bot, ctx=ctx, msg=msg)
+    await image_handler(bot=bot, ctx=ctx, model=model, msg=msg)
 
 @image.error
-async def image_error(ctx, error):
+async def image_error(ctx: Context, error: Exception):
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.reply(
             f"Please wait {error.retry_after:.2f} seconds before using this command again."

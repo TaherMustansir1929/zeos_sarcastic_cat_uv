@@ -12,6 +12,8 @@ from discord.ext.commands import Context, Bot
 import asyncio
 
 from agent_graph.graph import agent_graph
+from llms.gemini_image_gen import gemini_image_gen
+from llms.flux_image_gen import flux_image_generator
 
 # Animated loading messages
 LOADING_MESSAGES = [
@@ -25,7 +27,7 @@ LOADING_MESSAGES = [
 n = len(LOADING_MESSAGES)
 
 
-async def image_handler(bot: Bot, ctx: Context, msg: str):
+async def image_handler(bot: Bot, ctx: Context, model: str, msg: str):
     # Send initial loading message
     rand_idx = random.randint(0, n-1)
     loading_message = await ctx.send(LOADING_MESSAGES[rand_idx])
@@ -43,7 +45,20 @@ async def image_handler(bot: Bot, ctx: Context, msg: str):
     try:
         start_time = time.time()
 
-        ai_response, image_path = gemini_image_gen(msg)
+        ai_response = ""
+        image_path = ""
+
+        if model == "gemini":
+            ai_response, image_path = gemini_image_gen(msg)
+        elif model == "flux":
+            ai_response, image_path = flux_image_generator(msg)
+        
+        if image_path is None:
+            await ctx.send("Failed to generate image or no valid image_path found.")
+            return
+        elif ai_response is None:
+            ai_response = ""
+
         await send_image_to_discord(
             channel=ctx.channel,
             image_path=image_path,
@@ -58,43 +73,6 @@ async def image_handler(bot: Bot, ctx: Context, msg: str):
         animation_task.cancel()
         # Delete the loading message
         await loading_message.delete()
-
-
-def gemini_image_gen(user_prompt: str):
-    client = genai.Client()
-
-    contents = f"""
-    System: Generate an image that closely adheres to the provided description, focusing on realism, accuracy, and lifelike details. Avoid fantastical or whimsical elements unless explicitly requested. Interpret the description with precision and creativity. Even if the prompt is vague, surreal, inappropriate or unconventional, always generate a visual response—use imaginative judgment to ensure the result is to-the-point, coherent and realistic visual interpretation. Never skip generation.
-
-    User: {user_prompt}
-    """
-
-    response = client.models.generate_content(
-        model="gemini-2.0-flash-preview-image-generation",
-        contents=contents,
-        config=types.GenerateContentConfig(
-        response_modalities=['TEXT', 'IMAGE']
-        )
-    )
-
-    image_folder = "images"
-    os.makedirs(image_folder, exist_ok=True)
-
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"image_{timestamp}.png"
-
-    # Full path for the output file
-    output_path = os.path.join(image_folder, filename)
-
-    message = ""
-    for part in response.candidates[0].content.parts: # type: ignore
-        if part.text is not None:
-            message = part.text
-        elif part.inline_data is not None:
-            image = Image.open(BytesIO((part.inline_data.data))) # type: ignore
-            image.save(output_path)
-
-    return str(message), output_path
 
 
 async def send_image_to_discord(channel, image_path: str, message=None):

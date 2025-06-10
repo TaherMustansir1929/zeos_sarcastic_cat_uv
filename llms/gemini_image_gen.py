@@ -68,7 +68,7 @@ def gemini_image_edit(user_prompt: str, image_path: str):
         )
     )
 
-    image_folder = "edit_images/results"
+    image_folder = "images/edit_images/results"
     os.makedirs(image_folder, exist_ok=True)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

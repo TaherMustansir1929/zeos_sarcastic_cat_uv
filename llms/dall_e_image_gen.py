@@ -6,10 +6,10 @@ from typing import Optional, Dict, Any
 import os
 from datetime import datetime
 
-class FluxImageGenerator:
+class DallEImageGenerator:
     def __init__(self, api_key: str, base_url: str = "https://api.a4f.co/v1"):
         """
-        Initialize the Flux Image Generator
+        Initialize the Dall-E Image Generator
         
         Args:
             api_key: Your a4f.co API key
@@ -24,7 +24,7 @@ class FluxImageGenerator:
     
     def generate_image(self, 
                       prompt: str,
-                      model: str = "flux-pro",
+                      model: str = "provider-3/dall-e-3",
                       width: int = 1024,
                       height: int = 1024,
                       steps: int = 25,
@@ -33,11 +33,11 @@ class FluxImageGenerator:
                       negative_prompt: Optional[str] = None,
                       output_format: str = "png") -> Dict[str, Any]:
         """
-        Generate an image using Flux models
+        Generate an image using Dall-E models
         
         Args:
             prompt: Text description of the image to generate
-            model: Model to use (flux-pro, flux-dev, flux-schnell)
+            model: Model to use (provider-3/dall-e-3, provider-3/dall-e-3-v2)
             width: Image width in pixels
             height: Image height in pixels
             steps: Number of inference steps
@@ -101,7 +101,7 @@ class FluxImageGenerator:
         # Generate filename if not provided
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"flux_image_{timestamp}.png"
+            filename = f"dall_e_image_{timestamp}.png"
         
         filepath = os.path.join(output_dir, filename)
         
@@ -161,16 +161,16 @@ class FluxImageGenerator:
         return filepath, ai_response
 
 # Example usage
-def flux_image_generator(prompt: str):
+def dall_e_image_generator(prompt: str):
     # Initialize the generator with your API key
     api_key = str(os.getenv("OPENAI_API_KEY"))  # Replace with your actual API key
-    generator = FluxImageGenerator(api_key)
+    generator = DallEImageGenerator(api_key)
     
     # Example 1: Simple image generation
     try:        
         filepath, response = generator.generate_and_save(
             prompt=prompt,
-            model="provider-2/FLUX.1.1-pro",
+            model="provider-3/dall-e-3",
             width=1024,
             height=1024,
             steps=30,
@@ -184,28 +184,7 @@ def flux_image_generator(prompt: str):
     except Exception as e:
         print(f"Error: {e}")
         return None, None
-    
-    # # Example 2: Generate multiple variations
-    # prompts = [
-    #     "A cyberpunk cityscape at night with neon lights",
-    #     "A serene forest landscape with morning mist",
-    #     "A vintage car on an empty desert highway"
-    # ]
-    
-    # for i, prompt in enumerate(prompts):
-    #     try:
-    #         filepath = generator.generate_and_save(
-    #             prompt=prompt,
-    #             filename=f"variation_{i+1}.png",
-    #             model="flux-pro",
-    #             width=1024,
-    #             height=768,
-    #             steps=25
-    #         )
-    #         print(f"Generated variation {i+1}: {filepath}")
-            
-    #     except Exception as e:
-    #         print(f"Failed to generate variation {i+1}: {e}")
+
 
 if __name__ == "__main__":
-    flux_image_generator("A majestic dragon soaring through cloudy skies at sunset, photorealistic, highly detailed")
+    dall_e_image_generator("A majestic dragon soaring through cloudy skies at sunset, photorealistic, highly detailed")

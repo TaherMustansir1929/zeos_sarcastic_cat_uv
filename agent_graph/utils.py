@@ -50,9 +50,6 @@ def get_llm_model(handler: str) -> tuple[str, BaseChatModel]:
             "provider-4/gemini-2.5-pro-preview-05-06", # yes 
         ]
 
-        if handler == "assistant":
-            a4f_models_list.extend(["provider-4/claude-3.7-sonnet", "provider-4/claude-3.5-haiku"])
-
         random_idx = random.randint(0, len(a4f_models_list)-1)
 
         model_name = a4f_models_list[random_idx]

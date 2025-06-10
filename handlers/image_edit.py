@@ -72,7 +72,7 @@ async def image_edit_handler(bot: Bot, ctx: Context, message: discord.Message):
         await loading_message.delete()
 
 
-async def save_discord_image_with_metadata(message, save_directory="edit_images/saved_images"):
+async def save_discord_image_with_metadata(message, save_directory="images/edit_images/saved_images"):
     image_path = await save_discord_image(message, save_directory)
     
     if image_path:
@@ -99,7 +99,7 @@ async def save_discord_image_with_metadata(message, save_directory="edit_images/
     return None, None
 
 
-async def save_discord_image(message, save_directory="edit_images/saved_images"):
+async def save_discord_image(message, save_directory="images/saved_images"):
     
     # Create save directory if it doesn't exist
     os.makedirs(save_directory, exist_ok=True)

@@ -12,6 +12,7 @@ from discord.ext.commands import Context, Bot
 import asyncio
 
 from agent_graph.graph import agent_graph
+from llms.dall_e_image_gen import dall_e_image_generator
 from llms.gemini_image_gen import gemini_image_gen
 from llms.flux_image_gen import flux_image_generator
 
@@ -52,9 +53,11 @@ async def image_handler(bot: Bot, ctx: Context, model: str, msg: str):
             ai_response, image_path = gemini_image_gen(msg)
         elif model == "flux":
             ai_response, image_path = flux_image_generator(msg)
+        elif model == "dall-e":
+            ai_response, image_path = dall_e_image_generator(msg)
         
         if image_path is None:
-            await ctx.send("Failed to generate image or no valid image_path found.")
+            await ctx.reply("Failed to generate image or no valid image_path found.")
             return
         elif ai_response is None:
             ai_response = ""
@@ -62,11 +65,11 @@ async def image_handler(bot: Bot, ctx: Context, model: str, msg: str):
         await send_image_to_discord(
             channel=ctx.channel,
             image_path=image_path,
-            message=ai_response+f"`Execution time: {(time.time() - start_time):.2f} seconds`"
+            message=f"{ctx.author.mention} {ai_response}\n`Execution time: {(time.time() - start_time):.2f} seconds`"
         )
         
     except Exception as e:
-        await ctx.send(f"[image_handler] An error occurred: {str(e)}")
+        await ctx.reply(f"[image_handler] An error occurred: {str(e)}")
     
     finally:
         # Cancel the loading animation

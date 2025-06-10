@@ -146,8 +146,8 @@ async def speak_error(ctx, error):
 @commands.cooldown(1, 30, commands.BucketType.user)
 async def image(ctx: Context, model: str, *, msg: str):
 
-    if model not in ["gemini", "flux"]:
-        await ctx.reply("Invalid model. Please use one of the following: gemini, flux \nExample: !image `gemini` or `flux` <Your Prompt>")
+    if model not in ["gemini", "flux", "dall-e"]:
+        await ctx.reply("Invalid model. Please use one of the following: gemini, flux, dall-e \nExample: !image `gemini` or `flux` or `dall-e` <Your Prompt>")
         return
     
     await image_handler(bot=bot, ctx=ctx, model=model, msg=msg)

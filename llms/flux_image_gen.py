@@ -2,9 +2,17 @@ import requests
 import json
 import time
 import base64
-from typing import Optional, Dict, Any
+import binascii
+import logging
+from typing import Optional, Dict, Any, Tuple, Union
 import os
+from pathlib import Path
 from datetime import datetime
+
+from agent_graph.logger import (
+    log_info, log_warning, log_error, log_success, log_debug,
+    log_panel, log_loading, log_request_response, log_system
+)
 
 class FluxImageGenerator:
     def __init__(self, api_key: str, base_url: str = "https://api.a4f.co/v1"):
@@ -21,6 +29,7 @@ class FluxImageGenerator:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
+        log_debug(f"Initialized FluxImageGenerator with base URL: {self.base_url}")
     
     def generate_image(self, 
                       prompt: str,
@@ -47,8 +56,17 @@ class FluxImageGenerator:
             output_format: Output format (png, jpg, webp)
             
         Returns:
-            Dictionary containing the response data
+            Dictionary containing the response data or error information
+            
+        Raises:
+            requests.exceptions.RequestException: If the API request fails
+            ValueError: If the response cannot be parsed as JSON
         """
+        start_time = time.time()
+        log_info(f"Generating image with model: {model}")
+        log_debug(f"Prompt: {prompt}")
+        log_debug(f"Dimensions: {width}x{height}, Steps: {steps}, Guidance: {guidance_scale}")
+        
         payload = {
             "prompt": prompt,
             "model": model,
@@ -61,11 +79,29 @@ class FluxImageGenerator:
         
         if seed is not None:
             payload["seed"] = seed
+            log_debug(f"Using fixed seed: {seed}")
             
         if negative_prompt:
             payload["negative_prompt"] = negative_prompt
+            log_debug(f"Negative prompt: {negative_prompt}")
+        
+        # Log the API request
+        log_request_response(
+            prompt,
+            str({
+                "model": model,
+                "width": width,
+                "height": height,
+                "steps": steps,
+                "guidance_scale": guidance_scale,
+                "output_format": output_format,
+                "has_seed": seed is not None,
+                "has_negative_prompt": bool(negative_prompt)
+            })
+        )
         
         try:
+            log_info("Sending request to Flux API...")
             response = requests.post(
                 f"{self.base_url}/images/generations",
                 headers=self.headers,
@@ -73,14 +109,27 @@ class FluxImageGenerator:
                 timeout=120
             )
             response.raise_for_status()
+            log_success("Successfully received response from Flux API")
+            
+            # Log response time
+            api_time = time.time() - start_time
+            log_debug(f"API response time: {api_time:.2f} seconds")
+            
             return response.json()
             
         except requests.exceptions.RequestException as e:
-            return {"error": f"Request failed: {str(e)}"}
+            error_msg = f"Flux API request failed: {str(e)}"
+            log_error(error_msg, exception=e)
+            return {"error": error_msg}
+        except json.JSONDecodeError as e:
+            error_msg = f"Failed to parse JSON response: {str(e)}"
+            log_error(error_msg, exception=e)
+            return {"error": error_msg}
     
-    def save_image_from_response(self, response_data: Dict[str, Any], 
-                                filename: Optional[str] = None,
-                                output_dir: str = "images/generated_images") -> str:
+    def save_image_from_response(self, 
+                              response_data: Dict[str, Any], 
+                              filename: Optional[str] = None,
+                              output_dir: Union[str, Path] = "images/generated_images") -> str:
         """
         Save image from API response to file
         
@@ -91,48 +140,84 @@ class FluxImageGenerator:
             
         Returns:
             Path to saved image file
+            
+        Raises:
+            ValueError: If there's an error in the response or saving fails
+            IOError: If there's an error writing the file
         """
+        log_info("Saving image from API response")
+        
         if "error" in response_data:
-            raise ValueError(f"Cannot save image due to error: {response_data['error']}")
+            error_msg = f"Cannot save image due to error: {response_data['error']}"
+            log_error(error_msg)
+            raise ValueError(error_msg)
         
-        # Create output directory if it doesn't exist
-        os.makedirs(output_dir, exist_ok=True)
-        
-        # Generate filename if not provided
-        if filename is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"flux_image_{timestamp}.png"
-        
-        filepath = os.path.join(output_dir, filename)
-        
-        # Handle different response formats
-        if "data" in response_data and len(response_data["data"]) > 0:
+        try:
+            # Create output directory if it doesn't exist
+            output_dir = Path(output_dir)
+            output_dir.mkdir(parents=True, exist_ok=True)
+            log_debug(f"Output directory: {output_dir.absolute()}")
+            
+            # Generate filename if not provided
+            if filename is None:
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = f"flux_image_{timestamp}.png"
+            
+            filepath = output_dir / filename
+            
+            # Handle different response formats
+            if not response_data.get("data") or not isinstance(response_data["data"], list):
+                error_msg = "Invalid response format: missing or empty 'data' field"
+                log_error(error_msg)
+                raise ValueError(error_msg)
+                
             image_data = response_data["data"][0]
             
             if "b64_json" in image_data:
                 # Base64 encoded image
-                print("Base64 encoded image")
-                image_bytes = base64.b64decode(image_data["b64_json"])
-                with open(filepath, "wb") as f:
-                    f.write(image_bytes)
+                log_debug("Processing base64 encoded image")
+                try:
+                    image_bytes = base64.b64decode(image_data["b64_json"])
+                    with open(filepath, "wb") as f:
+                        f.write(image_bytes)
+                    log_success(f"Saved base64 encoded image to: {filepath}")
+                    log_debug(f"File size: {filepath.stat().st_size / 1024:.2f} KB")
+                except (binascii.Error, IOError) as e:
+                    error_msg = f"Failed to decode or save base64 image: {str(e)}"
+                    log_error(error_msg, exception=e)
+                    raise IOError(error_msg)
+                    
             elif "url" in image_data:
                 # Image URL - download it
-                print("URL based Image")
-                img_response = requests.get(image_data["url"])
-                img_response.raise_for_status()
-                with open(filepath, "wb") as f:
-                    f.write(img_response.content)
+                log_debug(f"Downloading image from URL: {image_data['url']}")
+                try:
+                    img_response = requests.get(image_data["url"], timeout=30)
+                    img_response.raise_for_status()
+                    with open(filepath, "wb") as f:
+                        f.write(img_response.content)
+                    log_success(f"Downloaded and saved image to: {filepath}")
+                    log_debug(f"File size: {filepath.stat().st_size / 1024:.2f} KB")
+                except requests.exceptions.RequestException as e:
+                    error_msg = f"Failed to download image from URL: {str(e)}"
+                    log_error(error_msg, exception=e)
+                    raise IOError(error_msg)
             else:
-                raise ValueError("No valid image data found in response")
-        else:
-            raise ValueError("No image data found in response")
-        
-        return filepath
+                error_msg = "No valid image data found in response (missing b64_json or url)"
+                log_error(error_msg)
+                log_debug(f"Response data: {json.dumps(response_data, indent=2)}")
+                raise ValueError(error_msg)
+            
+            return str(filepath)
+            
+        except Exception as e:
+            error_msg = f"Unexpected error saving image: {str(e)}"
+            log_error(error_msg, exception=e)
+            raise
     
     def generate_and_save(self, 
                          prompt: str,
                          filename: Optional[str] = None,
-                         **kwargs) -> tuple[str, str]:
+                         **kwargs) -> Tuple[str, str]:
         """
         Generate an image and save it in one step
         
@@ -142,32 +227,73 @@ class FluxImageGenerator:
             **kwargs: Additional arguments for generate_image()
             
         Returns:
-            Path to saved image file
+            Tuple containing (filepath, ai_response)
+            
+        Raises:
+            ValueError: If image generation or saving fails
         """
-        print(f"Generating image with prompt: '{prompt}'")
+        start_time = time.time()
+        log_info("Starting image generation and save process")
+        log_debug(f"Prompt: {prompt}")
+        log_debug(f"Additional kwargs: {kwargs}")
         
-        response = self.generate_image(prompt, **kwargs)
-        
-        if "error" in response:
-            raise ValueError(f"Image generation failed: {response['error']}")
-        
-        filepath = self.save_image_from_response(response, filename)
+        try:
+            # Generate the image
+            response = self.generate_image(prompt, **kwargs)
+            
+            if "error" in response:
+                error_msg = f"Image generation failed: {response['error']}"
+                log_error(error_msg)
+                raise ValueError(error_msg)
+            
+            # Save the image
+            filepath = self.save_image_from_response(response, filename)
+            
+            # Extract AI response or generate a default one
+            ai_response = response.get("data", [{}])[0].get("revised_prompt")
+            if ai_response is None:
+                ai_response = f"Generated image successfully for prompt: {prompt}"
+                log_debug("No revised prompt in response, using default")
+            else:
+                log_debug(f"Received revised prompt from API: {ai_response}")
+            
+            # Log success
+            total_time = time.time() - start_time
+            log_success(f"Image generation and save completed in {total_time:.2f} seconds")
+            log_info(f"Image saved to: {filepath}")
+            
+            return filepath, ai_response
+            
+        except Exception as e:
+            error_msg = f"Error in generate_and_save: {str(e)}"
+            log_error(error_msg, exception=e)
+            raise ValueError(error_msg) from e
 
-        print(f"API response: {response}")
-        ai_response = response.get("data", [{}])[0].get("revised_prompt")
-        if ai_response is None:
-            ai_response = f"Generated image successfully for prompt: {prompt}\n"
-        
-        return filepath, ai_response
-
-# Example usage
-def flux_image_generator(prompt: str):
-    # Initialize the generator with your API key
-    api_key = str(os.getenv("OPENAI_API_KEY"))  # Replace with your actual API key
-    generator = FluxImageGenerator(api_key)
+def flux_image_generator(prompt: str) -> Tuple[Optional[str], Optional[str]]:
+    """
+    Generate an image using Flux API based on the given prompt.
     
-    # Example 1: Simple image generation
-    try:        
+    Args:
+        prompt: Text description of the desired image
+        
+    Returns:
+        Tuple containing (ai_response, filepath) or (None, None) on failure
+    """
+    log_info("Starting Flux image generation")
+    log_debug(f"Input prompt: {prompt}")
+    
+    # Initialize the generator with API key
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        error_msg = "OPENAI_API_KEY environment variable not set"
+        log_error(error_msg)
+        return None, None
+        
+    try:
+        generator = FluxImageGenerator(api_key)
+        log_debug("Initialized FluxImageGenerator")
+        
+        # Generate and save the image
         filepath, response = generator.generate_and_save(
             prompt=prompt,
             model="provider-2/FLUX.1.1-pro",
@@ -178,11 +304,15 @@ def flux_image_generator(prompt: str):
             seed=42  # For reproducible results
         )
         
-        print(f"\nSuccess! Image saved to: {filepath} \nRevised prompt: {response}")
+        log_success(f"Image generation completed successfully")
+        log_info(f"Image saved to: {filepath}")
+        log_debug(f"AI response: {response}")
+        
         return response, filepath
         
     except Exception as e:
-        print(f"Error: {e}")
+        error_msg = f"Failed to generate image: {str(e)}"
+        log_error(error_msg, exception=e)
         return None, None
     
     # # Example 2: Generate multiple variations

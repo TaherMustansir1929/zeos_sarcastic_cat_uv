@@ -14,6 +14,10 @@ from agent_graph.utils import get_llm_model
 from agent_graph.nodes import agent_node, tools_node
 from agent_graph.routers import tools_router
 from agent_graph.state import State
+from agent_graph.logger import (
+    log_info, log_warning, log_error, log_success, log_debug,
+    log_panel, log_tool_usage, log_request_response, log_system
+)
 
 
 BASE_DIR = os.path.dirname(os.path.abspath("__file__"))
@@ -73,14 +77,27 @@ async def agent_graph(ctx: commands.Context, msg: str, handler: Literal["zeo", "
     parsed_response = response["messages"][-1].content
     
     end_time = time.time()
+    execution_time = end_time - start_time
     
-    final_response = f"""{ctx.author.mention} {parsed_response} \n `Executed in {(end_time - start_time):.2f} seconds` `AI Model: {model_name}`"""
+    # Format the final response
+    final_response = f"""{ctx.author.mention} {parsed_response} \n `Executed in {execution_time:.2f} seconds` `AI Model: {model_name}`"""
     
-    print(f"""
-    USER: {msg}\n
-    FINAL RESPONSE: {final_response}
-    TOOLS USED: {f"{response["custom_tools_used"]}" if len(response["custom_tools_used"]) > 0 else "None"}\n
-    """)
+    # Log the request and response details
+    log_panel(
+        "🤖 Agent Graph Execution Complete",
+        f"""[bold]User:[/] {ctx.author.name} (ID: {ctx.author.id})
+[bold]Input:[/] {msg}
+[bold]Model:[/] {model_name}
+[bold]Execution Time:[/] {execution_time:.2f}s
+[bold]Tools Used:[/] {', '.join(response['custom_tools_used']) if response['custom_tools_used'] else 'None'}""",
+        border_style="green"
+    )
+    
+    # Log the conversation
+    log_request_response(
+        f"{ctx.author.name}: {msg}",
+        str(parsed_response)  # Ensure response is a string
+    )
     
     if log == "speak":
         return f"{str(parsed_response)}%%{final_response}"

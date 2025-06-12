@@ -2,45 +2,45 @@
 import asyncio
 import logging
 import os
-from typing import Literal, cast
+import sys
+from typing import Literal
 from dotenv import load_dotenv
 
 import discord
 from discord.ext import commands
 from discord.ext.commands import Context
 
+# Import custom logger
+from agent_graph.logger import (
+    log_info, log_warning, log_error, log_success, log_debug,
+    log_panel, log_system, setup_logging
+)
+
 from handlers.assistant import ai_handler
 from handlers.channel_restriction import channel_restriction_handler
 from handlers.image_edit import image_edit_handler
-from handlers.image_gen import image_handler
 from handlers.poetry import poetry_handler
 from handlers.rate import rate_handler
 from handlers.rizz import rizz_handler
 from handlers.speak import speak_handler
 from handlers.word_counter import word_counter_handler
 from handlers.zeo import zeo_handler
+from handlers.image_gen import image_handler
 
 # Dictionary to store chat history for each user
 chat_histories_poetry = {}
 
-# Configure discord.py logging level to INFO to avoid excessive DEBUG logs
-discord_logger = logging.getLogger('discord')
-discord_logger.setLevel(logging.WARNING)
-
-# Configure root logger to prevent *any* default console output
-root_logger = logging.getLogger()
-# Remove existing handlers (like the default StreamHandler to console)
-for h in root_logger.handlers[:]:
-    root_logger.removeHandler(h)
-# Set level high to prevent processing unless specific handlers are added
-root_logger.setLevel(logging.CRITICAL)
-
-# The FileHandler below will still work if added to a specific logger or the root logger later.
+# Set up logging with rich
+setup_logging()
 
 load_dotenv()
 token = os.getenv("AHD_DISCORD_TOKEN")
 
-handler_1 = logging.FileHandler(filename="ahd_discord.log", encoding="utf-8", mode="w")
+if not token:
+    log_error("DISCORD_TOKEN not found in environment variables")
+    sys.exit(1)
+
+handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
@@ -52,19 +52,25 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 async def on_ready():
     await bot.tree.sync()
     if bot.user is not None:
-        print(f"we are ready to go in, {bot.user.name}")
+        log_success(f"Bot is ready! Logged in as {bot.user.name} (ID: {bot.user.id})")
+        log_info(f"Connected to {len(bot.guilds)} guilds")
+        log_info(f"Connected to the following guilds:")
+        for guild in bot.guilds:
+            log_info(f"- {guild.name} (ID: {guild.id})")
 
 
 @bot.event
 async def on_member_join(member):
-    await member.send(f"Welcome to the server {member.name}")
+    welcome_message = f"Welcome to the server {member.name}! We're glad to have you here! 😊"
+    await member.send(welcome_message)
+    log_info(f"Sent welcome message to {member.name} (ID: {member.id})")
 
 
 @bot.command(brief="Secret command. Beware.")
 async def secret(ctx):
-    await ctx.send(
-        "Welcome to the club twin! There are no secrets here. Just be yourself and spread positivity. Luv you gng!🥀❤"
-    )
+    secret_message = "Welcome to the club twin! There are no secrets here. Just be yourself and spread positivity. Luv you gng! 🥀❤"
+    await ctx.send(secret_message)
+    log_info(f"Secret command used by {ctx.author.name} (ID: {ctx.author.id})")
 
 
 # -------------------------------------------------------------------------------------
@@ -79,7 +85,7 @@ from agent_graph.graph import agent_graph
     brief="Ask me your stupid questions and Imma reply respectfully 😏🥀",
     help="Ask me your stupid questions and Imma reply respectfully 😏🥀",
 )
-@commands.cooldown(1, 30, commands.BucketType.user)
+@commands.cooldown(1, 15, commands.BucketType.user)
 async def zeo(ctx: Context, *, msg: str):
     
     await zeo_handler(bot=bot, ctx=ctx, msg=msg)
@@ -98,7 +104,7 @@ async def zeo_error(ctx, error):
     brief="Talk to AI",
     help="Use this command to access an AI chatbot directly into the server.",
 )
-@commands.cooldown(1, 30, commands.BucketType.user)
+@commands.cooldown(1, 15, commands.BucketType.user)
 async def ai(ctx, *, msg):
     
     await ai_handler(bot=bot, ctx=ctx, msg=msg)
@@ -110,7 +116,7 @@ async def ai_error(ctx, error):
             f"Please wait {error.retry_after:.2f} seconds before using this command again."
         )
     await ctx.reply(f"Sorry an error occurred -> {error}")
-
+    
 
 # ----------11LabsAudioCommand---------
 @bot.command(
@@ -190,7 +196,7 @@ async def edit_error(ctx: Context, error: Exception):
     help="This command is now deprecated. Please proceed with the new command: `!zeo <Your Msg>`",
 )
 @commands.cooldown(1, 15, commands.BucketType.user)
-async def ask(ctx, *, msg):
+async def ask(ctx):
     # await ask_handler(ctx, msg, chat_histories_google_sdk)
     await ctx.reply("This command is now deprecated. Please proceed with the new command: `!zeo <Your Msg>`\n Use `!help` command for further help. Thank You!")
 
@@ -291,4 +297,4 @@ async def poetry_error(ctx, error):
     await ctx.reply(f"Sorry an error occured -> {error}")
 
 
-bot.run(str(token), log_handler=handler_1, log_level=logging.DEBUG)
+bot.run(token=token, log_handler=handler, log_level=logging.ERROR)

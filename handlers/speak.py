@@ -15,30 +15,58 @@ from elevenlabs import VoiceSettings
 from elevenlabs.client import ElevenLabs
 
 from agent_graph.graph import agent_graph
+from agent_graph.logger import (
+    log_info, log_warning, log_error, log_success, log_debug,
+    log_panel, log_loading, log_request_response, log_system
+)
 
-# Animated loading messages
+# Animated loading messages with emojis
 LOADING_MESSAGES = [
-    "Thinking...",
-    "Stiring up thoughts",
-    "Processing...",
-    "Contemplating life choices...",
-    "Seeking Enlightenment...",
-    "Running some code...",
+    "🧠 Thinking deeply...",
+    "🤔 Contemplating life choices...",
+    "💡 Having an epiphany...",
+    "🔍 Analyzing your request...",
+    "🎯 Focusing on the task...",
+    "🚀 Almost there...",
+    "✨ Adding the final touches...",
+    "🎭 Channeling my inner philosopher..."
 ]
 n = len(LOADING_MESSAGES)
 
 async def speak_handler(bot: Bot, ctx: Context, handler: Literal['zeo', 'assistant', 'rizz', 'rate', 'react', 'word_count', 'poetry'], msg: str):
-   # Send initial loading message
+    """Handle zeo requests with rich logging and user feedback."""
+    n = len(LOADING_MESSAGES)
+    
+    # Log the incoming request
+    channel_name = getattr(ctx.channel, 'name', 'DM')
+    log_panel(
+        "🎭 Speak Request",
+        f"[bold]User:[/] {ctx.author.name} (ID: {ctx.author.id})\n[bold]Channel:[/] {channel_name}\n[bold]Message:[/] {msg}",
+        border_style="magenta"
+    )
+
+    # Send initial loading message
     rand_idx = random.randint(0, n-1)
     loading_message = await ctx.send(LOADING_MESSAGES[rand_idx])
 
     # Create a task to update loading message animation
+    should_continue = True
+    
     async def update_loading():
-        for _ in range(n):
-            await asyncio.sleep(0.5)  # Delay between animation frames
-            rand_idx = random.randint(0, n-1)
-            await loading_message.edit(content=LOADING_MESSAGES[rand_idx])
-
+        nonlocal should_continue
+        try:
+            while should_continue:
+                await asyncio.sleep(0.5)  # Delay between animation frames
+                if should_continue:  # Check again after sleep
+                    rand_idx = random.randint(0, n-1)
+                    try:
+                        await loading_message.edit(content=LOADING_MESSAGES[rand_idx])
+                    except Exception as edit_error:
+                        log_error(f"Error updating loading message: {str(edit_error)}")
+                        break
+        except Exception as e:
+            log_error(f"Error in loading animation: {str(e)}")
+    
     # Start the loading animation in the background
     animation_task = bot.loop.create_task(update_loading())
 
@@ -49,20 +77,25 @@ async def speak_handler(bot: Bot, ctx: Context, handler: Literal['zeo', 'assista
         ai_response = responses[0]
         final_response = responses[1]
 
-        audio_file = eleven_labs_api(ai_response, handler)
-        await send_audio(ctx.channel, audio_file, final_response)
-
-        # Optional - Delete the audio directory after sending the audio file
-        # delete_directory("audio")
-
-    except Exception as e:
-        await ctx.send(f"[speak_handler] An error occurred: {str(e)}")
+        try:
+            audio_file = eleven_labs_api(ai_response, handler)
+            await send_audio(ctx.channel, audio_file, final_response)
+            log_success(f"Successfully sent audio response for handler: {handler}")
+        except Exception as e:
+            log_error(f"Error in speak_handler: {str(e)}")
+            await ctx.send(f"❌ An error occurred while processing your request: {str(e)}")
     
     finally:
-        # Cancel the loading animation
-        animation_task.cancel()
-        # Delete the loading message
-        await loading_message.delete()
+        # Clean up the loading animation
+        try:
+            should_continue = False
+            animation_task.cancel()
+            try:
+                await loading_message.delete()
+            except Exception as delete_error:
+                log_error(f"Error deleting loading message: {str(delete_error)}")
+        except Exception as e:
+            log_error(f"Error during cleanup: {str(e)}")
 
     
 
@@ -112,8 +145,7 @@ def eleven_labs_api(text: str, handler: Optional[str]=None):
             if chunk:
                 f.write(chunk)
 
-    print(f"{filename}: A new audio file was saved successfully!")
-    # Return the path of the saved audio file
+    log_success(f"Audio file saved successfully: {output_path}")
     return output_path
 
 
@@ -124,7 +156,8 @@ async def send_audio(channel, file_path: str, message: Optional[str]=None):
         
         # Check if file exists
         if not audio_path.exists():
-            print(f"Error: Audio file '{file_path}' not found")
+            error_msg = f"Audio file not found: {file_path}"
+            log_error(error_msg)
             return None
         
         # Check file size (Discord has 25MB limit for regular users, 100MB for Nitro)
@@ -132,7 +165,8 @@ async def send_audio(channel, file_path: str, message: Optional[str]=None):
         max_size = 25 * 1024 * 1024  # 25MB in bytes
         
         if file_size > max_size:
-            print(f"Error: File size ({file_size / (1024*1024):.2f}MB) exceeds Discord's 25MB limit")
+            error_msg = f"File size ({file_size / (1024*1024):.2f}MB) exceeds Discord's 25MB limit"
+            log_error(error_msg)
             return None
         
         # Create Discord File object
@@ -144,17 +178,20 @@ async def send_audio(channel, file_path: str, message: Optional[str]=None):
         else:
             sent_message = await channel.send(file=discord_file)
         
-        print(f"Successfully sent audio file: {audio_path.name}")
+        log_success(f"Successfully sent audio file: {audio_path.name}")
         return sent_message
         
-    except discord.Forbidden:
-        print("Error: Bot doesn't have permission to send files in this channel")
+    except discord.Forbidden as e:
+        error_msg = "Bot doesn't have permission to send files in this channel"
+        log_error(error_msg)
         return None
     except discord.HTTPException as e:
-        print(f"Error sending file: {e}")
+        error_msg = f"HTTP error while sending file: {str(e)}"
+        log_error(error_msg)
         return None
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        error_msg = f"Unexpected error while sending file: {str(e)}"
+        log_error(error_msg)
         return None
 
 
@@ -173,9 +210,9 @@ def delete_directory(directory_path):
         
         # Delete the directory and all its contents
         shutil.rmtree(path)
-        print(f"Successfully deleted directory: {directory_path}")
+        log_info(f"Successfully deleted directory: {directory_path}")
         return True
         
     except Exception as e:
-        print(f"Error deleting directory '{directory_path}': {e}")
+        log_error(f"Error deleting directory '{directory_path}': {str(e)}")
         return False

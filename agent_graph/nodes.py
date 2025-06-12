@@ -1,3 +1,4 @@
+from langchain_groq import ChatGroq
 from my_prompts.langgraph_prompts import exp_prompt
 from my_prompts.rizz_prompts import rizz_prompt
 from my_prompts.rate_rizz_prompts import rate_prompt
@@ -21,7 +22,7 @@ async def agent_node(state: State):
     
     model_name, base_llm = state["model"]
 
-    if isinstance(base_llm, ChatOpenAI):
+    if isinstance(base_llm, ChatOpenAI) or isinstance(base_llm, ChatGroq):
         llm_with_tools = base_llm
     else:
         llm_with_tools = base_llm.bind_tools(tools=tools_list)

@@ -2,12 +2,15 @@ import asyncio
 from datetime import datetime
 import os
 import random
+import time
+from typing import Literal
 import aiofiles
 import aiohttp
 from discord.ext.commands import Bot, Context
 import discord
 
 from handlers.image_gen import send_image_to_discord
+from llms.flux_image_edit import flux_image_edit
 from llms.gemini_image_gen import gemini_image_edit
 
 # Animated loading messages
@@ -22,7 +25,9 @@ LOADING_MESSAGES = [
 n = len(LOADING_MESSAGES)
 
 
-async def image_edit_handler(bot: Bot, ctx: Context, message: discord.Message):
+async def image_edit_handler(bot: Bot, ctx: Context, handler: Literal["gemini", "flux"], message: discord.Message):
+    start_time = time.time()
+    
     # Send initial loading message
     rand_idx = random.randint(0, n-1)
     loading_message = await ctx.send(LOADING_MESSAGES[rand_idx])
@@ -58,9 +63,12 @@ async def image_edit_handler(bot: Bot, ctx: Context, message: discord.Message):
             await message.reply("Please attach an image to edit.")
             return
         
-        msg, output_path = gemini_image_edit(message.content, image_path)
+        if handler == "gemini":
+            msg, output_path = gemini_image_edit(message.content, image_path)
+        elif handler == "flux":
+            msg, output_path = flux_image_edit(message.content, image_path)
         
-        await send_image_to_discord(message.channel, output_path, msg)
+        await send_image_to_discord(message.channel, output_path, f"{ctx.author.mention} {msg}\n`Execution time: {(time.time() - start_time):.2f} seconds`")
     
     except Exception as e:
         await ctx.send(f"[image_handler] An error occurred: {str(e)}")
@@ -99,7 +107,7 @@ async def save_discord_image_with_metadata(message, save_directory="images/edit_
     return None, None
 
 
-async def save_discord_image(message, save_directory="images/saved_images"):
+async def save_discord_image(message, save_directory="images/edit_images/saved_images"):
     
     # Create save directory if it doesn't exist
     os.makedirs(save_directory, exist_ok=True)

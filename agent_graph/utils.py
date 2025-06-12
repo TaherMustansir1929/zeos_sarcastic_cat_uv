@@ -10,7 +10,6 @@ def get_llm_model(handler: str) -> tuple[str, BaseChatModel]:
     
     # 50/50 chance of Gemini and Groq and OpenAI
     gamble = random.randint(0, 2)
-    # gamble = 0
 
     if gamble == 0:
         gemini_models_list = [

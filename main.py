@@ -2,6 +2,7 @@
 import asyncio
 import logging
 import os
+from typing import Literal
 from dotenv import load_dotenv
 
 import discord
@@ -160,15 +161,19 @@ async def image_error(ctx: Context, error: Exception):
     await ctx.reply(f"Sorry an error occurred -> {error}")
 
 
-#----------GeminiImageEditCommand----------
+#----------Gemini / Flux-ImageEditCommand----------
 @bot.command(
-    brief="Edit an image using Google Gemini",
-    help="Use this command to edit an image using Google Gemini",
+    brief="Edit an image using Google Gemini or Flux.1 Kontext Pro",
+    help="Use this command to edit an image using Google Gemini or Flux.1 Kontext Pro",
 )
 @commands.cooldown(1, 30, commands.BucketType.user)
-async def edit(ctx: Context):
+async def edit(ctx: Context, handler: Literal["gemini", "flux"]):
     
-    await image_edit_handler(bot=bot, ctx=ctx, message=ctx.message)
+    if handler not in ["gemini", "flux"]:
+        await ctx.reply("Invalid handler. Please use one of the following: gemini, flux")
+        return
+    
+    await image_edit_handler(bot=bot, ctx=ctx, message=ctx.message, handler=handler)
 
 @edit.error
 async def edit_error(ctx: Context, error: Exception):

@@ -74,11 +74,12 @@ async def agent_graph(ctx: commands.Context, msg: str, handler: Literal["zeo", "
     
     end_time = time.time()
     
-    final_response = f"""{ctx.author.mention} {parsed_response} \n `Executed in {(end_time - start_time):.2f} seconds` `AI Model: {model_name}` {f"`Tools used: {response["custom_tools_used"]}`" if len(response["custom_tools_used"]) > 0 else ""}"""
+    final_response = f"""{ctx.author.mention} {parsed_response} \n `Executed in {(end_time - start_time):.2f} seconds` `AI Model: {model_name}`"""
     
     print(f"""
     USER: {msg}\n
-    FINAL RESPONSE: {final_response}\n\n
+    FINAL RESPONSE: {final_response}
+    TOOLS USED: {f"{response["custom_tools_used"]}" if len(response["custom_tools_used"]) > 0 else "None"}\n
     """)
     
     if log == "speak":

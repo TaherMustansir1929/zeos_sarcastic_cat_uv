@@ -2,6 +2,9 @@ import os
 import sqlite3
 import re
 
+from discord import Message
+from discord.ext.commands import Bot
+
 from agent_graph.graph import agent_graph
 
 # Define database path relative to the project root
@@ -45,7 +48,7 @@ def initialize_db():
 # Initialize the database on script load
 initialize_db()
 
-async def word_counter_handler(bot, message):
+async def word_counter_handler(bot: Bot, message):
     if message.author == bot.user:
         return
 

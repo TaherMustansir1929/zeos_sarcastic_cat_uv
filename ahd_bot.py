@@ -23,6 +23,7 @@ from handlers.poetry import poetry_handler
 from handlers.rate import rate_handler
 from handlers.rizz import rizz_handler
 from handlers.speak import speak_handler
+from handlers.user_roaster import user_roaster_handler
 from handlers.word_counter import word_counter_handler
 from handlers.zeo import zeo_handler
 from handlers.image_gen import image_handler
@@ -240,9 +241,10 @@ async def rate_error(ctx: Context, error: Exception):
     await ctx.reply(f"Sorry an error occured -> {error}")
 
 
-# ------WORD COUNTER FUNC-----------
+# ------WORD COUNTER/ CHANNEL RESTRICTION/ USER ROASTER FUNC-----------
 @bot.event
-async def on_message(message):
+async def on_message(message: discord.Message):
+    await user_roaster_handler(bot, message)
     await word_counter_handler(bot, message)
     await channel_restriction_handler(bot, message)
 

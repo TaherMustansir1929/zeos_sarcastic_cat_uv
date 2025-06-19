@@ -9,7 +9,7 @@ class State(TypedDict):
     messages: Annotated[List[BaseMessage], add_messages]
     query: str
     log: Optional[str]
-    handler: Literal["zeo", "assistant", "rizz", "rate", "react", "word_count", "poetry"]
+    handler: Literal["zeo", "assistant", "rizz", "rate", "react", "word_count", "poetry", "user_roaster"]
     tool_count: int
     model: tuple[str, BaseChatModel]
     custom_tools_used: List[str]

@@ -1,4 +1,4 @@
-from typing import Literal, Optional, cast
+from typing import Literal, Optional, Union, cast
 import discord
 from discord.ext import commands
 import os
@@ -46,7 +46,7 @@ builder.add_edge(TOOLS, AGENT)
 graph = builder.compile(checkpointer=memory)
 
 
-async def agent_graph(ctx: commands.Context, msg: str, handler: Literal["zeo", "assistant", "rizz", "rate", "react", "word_count", "poetry"], log: Optional[str]) -> str:
+async def agent_graph(ctx: Union[commands.Context, discord.Message], msg: str, handler: Literal["zeo", "assistant", "rizz", "rate", "react", "word_count", "poetry", "user_roaster"], log: Optional[str]) -> str:
     start_time = time.time()
     
     model_name, llm = get_llm_model(handler=handler)
@@ -75,6 +75,7 @@ async def agent_graph(ctx: commands.Context, msg: str, handler: Literal["zeo", "
         raise ValueError("BadResponse: Latest message is not typeof: AIMessage")
     
     parsed_response = response["messages"][-1].content
+    parsed_response = str(parsed_response).split("</think>")[-1]
     
     end_time = time.time()
     execution_time = end_time - start_time
@@ -96,9 +97,9 @@ async def agent_graph(ctx: commands.Context, msg: str, handler: Literal["zeo", "
     # Log the conversation
     log_request_response(
         f"{ctx.author.name}: {msg}",
-        str(parsed_response)  # Ensure response is a string
+        parsed_response  # Ensure response is a string
     )
     
     if log == "speak":
-        return f"{str(parsed_response)}%%{final_response}"
+        return f"{parsed_response}%%{final_response}"
     return final_response

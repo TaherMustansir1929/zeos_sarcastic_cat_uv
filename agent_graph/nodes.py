@@ -1,12 +1,3 @@
-from langchain_groq import ChatGroq
-from my_prompts.langgraph_prompts import exp_prompt
-from my_prompts.rizz_prompts import rizz_prompt
-from my_prompts.rate_rizz_prompts import rate_prompt
-from my_prompts.react_prompts import react_prompt
-from my_prompts.poetry_prompts import poetry_prompt
-from my_prompts.ai_prompts import ai_prompt
-from my_prompts.word_count_prompts import word_count_prompt
-
 from typing import List, cast
 
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, ToolMessage
@@ -49,7 +40,7 @@ async def agent_node(state: State) -> State:
         raise
     
     try:
-        from my_prompts.langgraph_prompts import exp_prompt
+        from my_prompts.langgraph_prompts import exp_prompt, user_roaster_prompt
         from my_prompts.ai_prompts import ai_prompt
         from my_prompts.rizz_prompts import rizz_prompt
         from my_prompts.rate_rizz_prompts import rate_prompt
@@ -64,7 +55,8 @@ async def agent_node(state: State) -> State:
             "poetry": poetry_prompt,
             "assistant": ai_prompt,
             "react": react_prompt,
-            "word_count": word_count_prompt
+            "word_count": word_count_prompt,
+            "user_roaster": user_roaster_prompt
         }
         log_debug(f"Loaded prompts for handlers: {', '.join(prompts_dict.keys())}")
     except ImportError as e:

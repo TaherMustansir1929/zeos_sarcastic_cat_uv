@@ -13,6 +13,7 @@ load_dotenv()
 
 MINECRAFT_CHANNEL_ID = int(os.getenv("AHD_MINECRAFT_CHANNEL_ID", "0"))
 # MINECRAFT_CHANNEL_ID = int(os.getenv("CHANNEL_ID_EXP", "0"))
+BOT_ID = 1361449135730982943
 
 async def minecraft_channel_handler(bot: Bot, message: Message):
     if message.channel.id != MINECRAFT_CHANNEL_ID:
@@ -22,7 +23,13 @@ async def minecraft_channel_handler(bot: Bot, message: Message):
         log_error("MINECRAFT_CHANNEL_ID not found in environment variables")
         return
     
-    msg = message.content.split("»")[-1].strip()
+    if message.author.id != BOT_ID:
+        return
+    
+    msg = message.content.split("»")
+    if len(msg) != 2:
+        return
+    msg = msg[1].strip()
 
     handlers_list = ["!ai", "!zeo", "!poetry", "!rate", "!rizz"]
 

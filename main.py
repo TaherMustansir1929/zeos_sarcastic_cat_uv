@@ -19,6 +19,7 @@ from agent_graph.logger import (
 from handlers.assistant import ai_handler
 from handlers.channel_restriction import channel_restriction_handler
 from handlers.image_edit import image_edit_handler
+from handlers.minecraft_channel import minecraft_channel_handler
 from handlers.poetry import poetry_handler
 from handlers.rate import rate_handler
 from handlers.rizz import rizz_handler
@@ -244,8 +245,9 @@ async def rate_error(ctx: Context, error: Exception):
 # ------WORD COUNTER/ CHANNEL RESTRICTION/ USER ROASTER FUNC-----------
 @bot.event
 async def on_message(message: discord.Message):
-    await user_roaster_handler(bot, message)
     await word_counter_handler(bot, message)
+    await user_roaster_handler(bot, message)
+    await minecraft_channel_handler(bot, message)
     await channel_restriction_handler(bot, message)
 
 

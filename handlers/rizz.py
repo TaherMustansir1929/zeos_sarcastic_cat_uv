@@ -25,6 +25,7 @@ LOADING_MESSAGES = [
 
 async def rizz_handler(bot: Bot, ctx: Context, msg: str):
     """Handle Rizz requests with rich logging and user feedback."""
+    msg = msg if msg is not None else "rizz me up freaky style"
     n = len(LOADING_MESSAGES)
     
     # Log the incoming request

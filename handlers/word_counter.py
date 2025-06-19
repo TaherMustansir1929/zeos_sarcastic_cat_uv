@@ -2,7 +2,7 @@ import os
 import sqlite3
 import re
 
-from my_prompts.word_count_prompts import word_count_reaction
+from agent_graph.graph import agent_graph
 
 # Define database path relative to the project root
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -14,7 +14,7 @@ if not os.path.exists(DB_DIR):
     os.makedirs(DB_DIR)
 
 # Define target phrases globally or load from config
-TARGET_PHRASES = ["low taper fade", "nigga", "massive"]
+TARGET_PHRASES = ["low taper fade", "nigga", "nigger", "massive", "job", "job application", "employment", "unemployment", "unemployed", "empolyed", "sigma", "ohio", "grimace shake", "fanum tax", "skibidi toilet"]
 
 def _sanitize_phrase_for_table_name(phrase):
     """Sanitizes a phrase to be used as a valid SQLite table name."""
@@ -84,13 +84,23 @@ async def word_counter_handler(bot, message):
         conn.close()
 
         # Send message in channel with updated count
-        reaction_response = word_count_reaction(matched_phrase, new_count, message.author)
-        response = f"{message.author.mention} said `{matched_phrase}` {new_count} times! \n{reaction_response}"
+        final_prompt = f"""
+        the specific word user said: {matched_phrase}
+        amount of time said: {new_count}
+        Discord user id: {user_id}
+        """
+        reaction_response = await agent_graph(
+            ctx=message,
+            msg=final_prompt,
+            handler="word_count",
+            log="speak"
+        )
+        response = f"{message.author.mention} said `{matched_phrase}` {new_count} times! \n{reaction_response.split("%%")[0]}"
         await message.channel.send(response)
 
         return # Exit after handling the first match
 
-# Remove old CSV handling logic (commented out or deleted)
+# Remove old CSV handling logic (commented out)
 #    # Create word_count directory if it doesn't exist
 #    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 #    word_count_dir = os.path.join(BASE_DIR, "word_count")

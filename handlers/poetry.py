@@ -1,38 +1,93 @@
-from llms.genai import new_gemini_client
-from my_prompts.poetry_prompts import poetry_prompt
+import random
+from discord.ext.commands import Context, Bot
+import asyncio
+from typing import Optional
 
+from agent_graph.graph import agent_graph
+from agent_graph.logger import (
+    log_info, log_warning, log_error, log_success, log_debug,
+    log_panel, log_loading, log_request_response, log_system
+)
 
-async def poetry_handler(ctx, msg, chat_histories_poetry):
-    user_id = ctx.author.id
-    if user_id not in chat_histories_poetry:
-        chat_histories_poetry[user_id] = []
+# Animated loading messages with emojis
+LOADING_MESSAGES = [
+    "🧠 Stiring up thoughts...",
+    "⚙️ Processing your request...",
+    "🤔 Contemplating life choices...",
+    "💡 Seeking Enlightenment...",
+    "🔥 Running some code...",
+    "📡 Communicating with the AI...",
+    "🔍 Analyzing your request...",
+    "🎯 Focusing on the task...",
+    "🚀 Almost there...",
+    "✨ Adding the final touches..."
+]
 
-    final_prompt = f"""
-        {poetry_prompt}
-        Discord User ID = {ctx.author.id}
-        User Prompt for poetry(shayri) topic = {msg}
-    """
-
+async def poetry_handler(bot: Bot, ctx: Context, msg: str):
+    """Handle poetry requests with rich logging and user feedback."""
+    n = len(LOADING_MESSAGES)
+    
+    # Log the incoming request
+    channel_name = getattr(ctx.channel, 'name', 'DM')
+    log_panel(
+        "📨 New Poetry Request",
+        f"[bold]User:[/] {ctx.author.name} (ID: {ctx.author.id})\n[bold]Channel:[/] {channel_name}\n[bold]Message:[/] {msg}",
+        border_style="blue"
+    )
+    
+    # Send initial loading message
+    rand_idx = random.randint(0, n-1)
+    loading_message = await ctx.send(LOADING_MESSAGES[rand_idx])
+    
+    # Create a task to update loading message animation
+    should_continue = True
+    
+    async def update_loading():
+        nonlocal should_continue
+        try:
+            while should_continue:
+                await asyncio.sleep(0.5)  # Delay between animation frames
+                if should_continue:  # Check again after sleep
+                    rand_idx = random.randint(0, n-1)
+                    try:
+                        await loading_message.edit(content=LOADING_MESSAGES[rand_idx])
+                    except Exception as edit_error:
+                        log_error(f"Error updating loading message: {str(edit_error)}")
+                        break
+        except Exception as e:
+            log_error(f"Error in loading animation: {str(e)}")
+    
+    # Start the loading animation in the background
+    animation_task = bot.loop.create_task(update_loading())
+    
     try:
-        response, updated_chat_history = new_gemini_client(
-            sys_prompt=final_prompt,
-            user_prompt=msg,
-            file_path="poetry.log",
-            chat_history=chat_histories_poetry[user_id],
-            handler_name="poetry_handler",
-        )
-
-        # Update the chat history with the new user message and response
-        chat_histories_poetry[user_id] = updated_chat_history
-
-        # Keep only the last 10 interactions to prevent the history from getting too large
-        if len(chat_histories_poetry[user_id]) > 10:
-            chat_histories_poetry[user_id] = chat_histories_poetry[user_id][-10:]
-
+        # Log that we're starting to process the request
+        log_info(f"Processing poetry request from {ctx.author.name} (ID: {ctx.author.id})")
+        
+        # Process the request
+        with log_loading("Generating poetry response..."):
+            ai_response = await agent_graph(ctx=ctx, msg=msg, handler="poetry", log=None)
+        
+        # Send the response
+        await ctx.reply(ai_response)
+        log_success(f"Successfully responded to {ctx.author.name} (ID: {ctx.author.id})")
+        
     except Exception as e:
-        response = (
-            "An error occurred while processing your request. Please try again later."
-        )
-        print(e)
-
-    await ctx.reply(response)
+        error_msg = f"Error processing poetry request: {str(e)}"
+        log_error(error_msg, e)
+        
+        # Send error message to the user
+        error_response = "❌ Oops! Something went wrong while processing your request. Please try again later."
+        await ctx.send(error_response)
+        
+    finally:
+        # Clean up the loading animation
+        try:
+            should_continue = False
+            animation_task.cancel()
+            try:
+                await loading_message.delete()
+            except Exception as delete_error:
+                log_error(f"Error deleting loading message: {str(delete_error)}")
+        except Exception as e:
+            log_error(f"Error during cleanup: {str(e)}")

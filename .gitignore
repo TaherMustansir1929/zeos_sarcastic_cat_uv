@@ -18,5 +18,6 @@ wheels/
 *.log
 logs/
 db/
+*.db
 images/
 audio/

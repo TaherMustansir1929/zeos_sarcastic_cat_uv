@@ -3,7 +3,7 @@ import asyncio
 import logging
 import os
 import sys
-from typing import Literal
+from typing import Literal, Optional
 from dotenv import load_dotenv
 
 import discord
@@ -207,12 +207,13 @@ async def ask(ctx):
     help="Use this command to generate a dirty sus pickup line",
 )
 @commands.cooldown(1, 15, commands.BucketType.user)
-async def rizz(ctx):
-    await rizz_handler(ctx)
+async def rizz(ctx: Context, *, msg: Optional[str]):
+    msg = msg if msg is not None else "rizz me up freaky style"
+    await rizz_handler(bot=bot, ctx=ctx, msg=msg)
 
 
 @rizz.error
-async def rizz_error(ctx, error):
+async def rizz_error(ctx: Context, error: Exception):
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.send(
             f"Please wait {error.retry_after:.2f} seconds before using this command again."
@@ -226,12 +227,12 @@ async def rizz_error(ctx, error):
     help="Call this command along with your pickup line and it will rate is out of 10",
 )
 @commands.cooldown(1, 15, commands.BucketType.user)
-async def rate(ctx, *, msg):
-    await rate_handler(ctx, msg)
+async def rate(ctx: Context, *, msg: str):
+    await rate_handler(bot=bot, ctx=ctx, msg=msg)
 
 
 @rate.error
-async def rate_error(ctx, error):
+async def rate_error(ctx: Context, error: Exception):
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.send(
             f"Please wait {error.retry_after:.2f} seconds before using this command again."
@@ -251,8 +252,13 @@ async def on_message(message):
     brief="Checks the bot's latency.",
     help="Responds with 'Pong!' and the current latency in milliseconds.",
 )
-async def ping(ctx: commands.Context):
+async def ping(ctx: Context):
     latency = round(bot.latency * 1000 * 10)  # Latency in milliseconds
+    log_panel(
+        "🏓 Ping Command",
+        f"[bold]User:[/] {ctx.author.name} (ID: {ctx.author.id})\n[bold]Channel:[/] {ctx.channel.name}\n[bold]Latency:[/] {latency / 10}ms", # type: ignore
+        border_style="white"
+    )
     await ctx.reply(f"Pong! 🏓 ({latency / 10}ms)")
 
 
@@ -284,12 +290,12 @@ async def spam_msg(ctx, *, msg: str):
     help="Use this command to generate a piece of Urdu poetry based on your chosen topic",
 )
 @commands.cooldown(1, 15, commands.BucketType.user)
-async def poetry(ctx, *, msg):
-    await poetry_handler(ctx, msg, chat_histories_poetry)
+async def poetry(ctx: Context, *, msg: str):
+    await poetry_handler(bot=bot, ctx=ctx, msg=msg)
 
 
 @poetry.error
-async def poetry_error(ctx, error):
+async def poetry_error(ctx: Context, error: Exception):
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.send(
             f"Please wait {error.retry_after:.2f} seconds before using this command again."

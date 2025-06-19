@@ -388,6 +388,5 @@ Take reference from this list of pickup lines and choose a random one from 1-to-
 Make sure you choose the pickup line at random.
 Remove any cringy aspect and try to be more dirty and disgusting.
 Use suspicious emojis along with the response.
-Do NOT make the response any longer than 2 or 3 sentences. (NO NEED FOR A PARAGRAPH). Be straight forward -> Try Hard. Only give the pickup line as the response no other bullshit.
-Try to mention the user's name in your pickup line in order to make it more personal.
+Do NOT make the response any longer than 2 or 3 sentences. (NO NEED FOR A PARAGRAPH). Be straight forward -> Try Hard. Only give the pickup line as the response no other bullshit. 
 """

@@ -1,0 +1,17 @@
+[2025-07-11 17:16:32] [ERROR   ] discord.client: Attempting a reconnect in 1.06s
+Traceback (most recent call last):
+  File "/home/zeoxd/Documents/zeos_sarcastic_cat_uv/.venv/lib/python3.12/site-packages/discord/client.py", line 704, in connect
+    await self.ws.poll_event()
+  File "/home/zeoxd/Documents/zeos_sarcastic_cat_uv/.venv/lib/python3.12/site-packages/discord/gateway.py", line 627, in poll_event
+    await self.received_message(msg.data)
+  File "/home/zeoxd/Documents/zeos_sarcastic_cat_uv/.venv/lib/python3.12/site-packages/discord/gateway.py", line 532, in received_message
+    await self.send_as_json(beat)
+  File "/home/zeoxd/Documents/zeos_sarcastic_cat_uv/.venv/lib/python3.12/site-packages/discord/gateway.py", line 663, in send_as_json
+    await self.send(utils._to_json(data))
+  File "/home/zeoxd/Documents/zeos_sarcastic_cat_uv/.venv/lib/python3.12/site-packages/discord/gateway.py", line 659, in send
+    await self.socket.send_str(data)
+  File "/home/zeoxd/Documents/zeos_sarcastic_cat_uv/.venv/lib/python3.12/site-packages/aiohttp/client_ws.py", line 245, in send_str
+    await self._writer.send_frame(
+  File "/home/zeoxd/Documents/zeos_sarcastic_cat_uv/.venv/lib/python3.12/site-packages/aiohttp/_websocket/writer.py", line 126, in send_frame
+    raise ClientConnectionResetError("Cannot write to closing transport")
+aiohttp.client_exceptions.ClientConnectionResetError: Cannot write to closing transport

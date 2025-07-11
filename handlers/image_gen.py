@@ -19,6 +19,7 @@ from agent_graph.logger import (
 from llms.dall_e_image_gen import dall_e_image_generator
 from llms.gemini_image_gen import gemini_image_gen
 from llms.flux_image_gen import flux_image_generator
+from llms.google_imagen_image_gen import google_imagen_image_generator
 
 # Animated loading messages with emojis
 LOADING_MESSAGES = [
@@ -76,15 +77,18 @@ async def image_handler(bot: Bot, ctx: Context, model: str, msg: str):
             log_debug("Using DALL-E 3 model for image generation")
             ai_response, image_path = dall_e_image_generator(msg)
         elif model == "gemini":
-            log_debug("Using Gemini Pro Vision model for image generation")
+            log_debug("Using Gemini Flash Preview model for image generation")
             ai_response, image_path = gemini_image_gen(msg)
         elif model == "flux":
             log_debug("Using Flux model for image generation")
             ai_response, image_path = flux_image_generator(msg)
+        elif model == "imagen":
+            log_debug("Using Google Imagen model for image generation")
+            ai_response, image_path = google_imagen_image_generator(msg)
         else:
             error_msg = f"Invalid model specified: {model}"
             log_error(error_msg)
-            await ctx.send("❌ Invalid model specified. Please use 'dall-e-3', 'gemini-pro-vision', or 'flux'.")
+            await ctx.send("❌ Invalid model specified. Please use 'dall-e-3', 'gemini-flash-preview', 'google-imagen-3', or 'flux'.")
             return
         
         log_success(f"Successfully generated image with {model}")

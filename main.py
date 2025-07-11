@@ -146,16 +146,16 @@ async def speak_error(ctx, error):
     await ctx.reply(f"Sorry an error occurred -> {error}")
 
 
-# ----------Gemini/Flux-ImageGenCommand---------
+# ----------Gemini/Flux/Dall-E/Imagen-ImageGenCommand---------
 @bot.command(
-    brief="Create AI images using Google Gemini or Flux.1 Kontext Pro",
+    brief="Create AI images using Google Imagen, BFL Flux1.1 Pro, Google Flash or OpenAI Dall-E ",
     help="Use this command to create AI images using Google Gemini or Flux.1 Kontext Pro",
 )
 @commands.cooldown(1, 30, commands.BucketType.user)
 async def image(ctx: Context, model: str, *, msg: str):
 
-    if model not in ["gemini", "flux", "dall-e"]:
-        await ctx.reply("Invalid model. Please use one of the following: gemini, flux, dall-e \nExample: !image `gemini` or `flux` or `dall-e` <Your Prompt>")
+    if model not in ["gemini", "flux", "dall-e", "imagen"]:
+        await ctx.reply("Invalid model. Please use one of the following: gemini, flux, dall-e, imagen\nExample: !image `gemini` or `flux` or `dall-e` or `imagen` <Your Prompt>")
         return
     
     await image_handler(bot=bot, ctx=ctx, model=model, msg=msg)

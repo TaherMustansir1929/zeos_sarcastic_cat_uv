@@ -10,6 +10,7 @@ def get_llm_model(handler: str) -> tuple[str, BaseChatModel]:
     
     # 50/50 chance of Gemini and Groq and OpenAI
     gamble = random.randint(0, 2)
+    gamble = 2
 
     if gamble == 0:
         gemini_models_list = [
@@ -42,16 +43,17 @@ def get_llm_model(handler: str) -> tuple[str, BaseChatModel]:
         a4f_base_url = "https://api.a4f.co/v1"
         a4f_models_list = [
             "provider-1/mistral-large", # yes
-            "provider-5/gpt-4o", # yes
+            "provider-6/gpt-4.1", # yes
             "provider-5/gpt-4.1-mini", # yes
-            "provider-2/gpt-3.5-turbo", # yes
+            "provider-6/o3-pro",
+            "provider-6/o4-mini-high",
             "provider-3/deepseek-v3", # yes
-            "provider-3/gemini-2.5-pro-preview-06-05", # yes
-            "provider-6/grok-3-reasoning", # yes
+            "provider-6/gemini-2.5-flash-thinking", # yes
+            "provider-3/grok-4-0709", # yes
         ]
 
         random_idx = random.randint(0, len(a4f_models_list)-1)
 
-        model_name = a4f_models_list[random_idx]
+        model_name = a4f_models_list[7]
 
         return model_name.split("/")[1], ChatOpenAI(model=model_name, base_url=a4f_base_url)

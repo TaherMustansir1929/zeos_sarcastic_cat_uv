@@ -296,7 +296,7 @@ def flux_image_generator(prompt: str) -> Tuple[Optional[str], Optional[str]]:
         # Generate and save the image
         filepath, response = generator.generate_and_save(
             prompt=prompt,
-            model="provider-2/FLUX.1.1-pro",
+            model="provider-1/FLUX.1.1-pro",
             width=1024,
             height=1024,
             steps=30,
